@@ -531,30 +531,38 @@ function removeFromTeam(t,id){const T=S.teams[t];T.members=T.members.filter(x=>x
 /* ---------- Sincronización ---------- */
 let S=null,ver=0,ops=[],flushing=false,online=true,dirtyRender=false,seq=0;
 const MODE0=localStorage.getItem('mode')||'pista';
-const ui={mode:MODE0,tab:localStorage.getItem('tab_'+MODE0)||(MODE0==='playa'?'parejas':localStorage.getItem('tab')||'marcador'),rotTeam:'A',sheet:null,local:localStorage.getItem('local')==='1'};
+const ui={mode:MODE0,tab:localStorage.getItem('tab_'+MODE0)||(MODE0==='playa'?'parejas':localStorage.getItem('tab')||'marcador'),rotTeam:'A',sheet:null,local:localStorage.getItem('local')!=='0'};
 function setSync(state){const d=document.getElementById('dot'),t=document.getElementById('syncTxt');
-  if(ui.local){d.className='dot busy';d.style.animation='none';t.textContent='Solo este móvil';return}d.style.animation='';
+  if(ui.local&&state!=='off'){d.className='dot';d.style.animation='';t.textContent='Marcador local';return}d.style.animation='';
   d.className='dot'+(state==='off'?' off':state==='busy'?' busy':'');t.textContent=state==='off'?'Sin conexión':state==='busy'?'Guardando':'En vivo'}
 // Cada cambio lleva un id; el estado guarda los últimos ids aplicados para no aplicarlo dos veces
+// Marcador local: el marcador (match y beach.match) vive solo en este móvil; lo demás se sincroniza
+const R={loaded:false,match:null,bmatch:null};
+function rememberRemote(st){R.loaded=true;R.match=st&&st.match?clone(st.match):null;R.bmatch=st&&st.beach&&st.beach.match!==undefined?clone(st.beach.match):null}
+const nonMatchKey=st=>JSON.stringify({...st,match:0,version:0,applied:0,beach:st.beach?{...st.beach,match:0}:0});
+let ldirty=localStorage.getItem('ldirty')==='1';
+const setDirty=v=>{ldirty=v;localStorage.setItem('ldirty',v?'1':'0')};
+function keepLocalMatch(next,prev){if(!ui.local||!ldirty||!prev)return next;if(prev.match)next.match=prev.match;if(prev.beach&&next.beach)next.beach.match=prev.beach.match??null;else if(prev.beach&&!next.beach){next.beach=prev.beach}return next}
+function payload(){if(!ui.local)return S;const c=clone(S);if(R.loaded){c.match=R.match||c.match;if(c.beach)c.beach.match=R.bmatch}return c}
 function applyOp(st,op){st.applied=st.applied||[];if(st.applied.includes(op.id))return;op.fn(st);st.applied.push(op.id);if(st.applied.length>200)st.applied.splice(0,st.applied.length-200)}
 function saveCache(){try{localStorage.setItem('cache',JSON.stringify({S,ver}))}catch(e){}}
-function mutate(fn){if(!S)return;if(ui.local){fn(S);saveCache();render();return}seq++;const op={id:uid()+uid(),fn};applyOp(S,op);ops.push(op);saveCache();render();flush()}
+function mutate(fn){if(!S)return;if(ui.local){const before=nonMatchKey(S);fn(S);if(nonMatchKey(S)===before){setDirty(true);saveCache();render();return}S.applied=S.applied||[];const id=uid()+uid();S.applied.push(id);seq++;ops.push({id,fn});saveCache();render();flush();return}seq++;const op={id:uid()+uid(),fn};applyOp(S,op);ops.push(op);saveCache();render();flush()}
 async function flush(){
   if(flushing||!ops.length)return;flushing=true;setSync('busy');
   const sent=ops.length;
   try{
-    const r=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({base:ver,state:S})});
+    const r=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({base:ver,state:payload()})});
     const j=await r.json();
-    if(r.ok){ver=j.version;S.version=ver;ops.splice(0,sent);online=true;saveCache()}
+    if(r.ok){ver=j.version;S.version=ver;ops.splice(0,sent);online=true;if(ui.local){const pl=payload();rememberRemote(pl)}else rememberRemote(S);saveCache()}
     else if(r.status===409){ // otro móvil cambió algo: aplicamos encima solo los cambios que el servidor aún no tiene
-      online=true;S=j.state||initial();ver=j.version;const done=S.applied||[];ops=ops.filter(op=>!done.includes(op.id));for(const op of ops)applyOp(S,op);saveCache();render()}
+      online=true;const prev=S;rememberRemote(j.state);S=keepLocalMatch(j.state||initial(),prev);ver=j.version;const done=S.applied||[];ops=ops.filter(op=>!done.includes(op.id));for(const op of ops)applyOp(S,op);saveCache();render()}
     else throw new Error(j.error||r.status);
   }catch(e){online=false}
   flushing=false;setSync(online?(ops.length?'busy':'ok'):'off');
   if(online&&ops.length)flush();
 }
 async function poll(){
-  if(flushing||document.hidden||ui.local)return;
+  if(flushing||document.hidden)return;
   if(ops.length){flush();return}
   const mySeq=seq;
   try{
@@ -562,7 +570,7 @@ async function poll(){
     // Si mientras esperábamos hubo un cambio local o un guardado, esta respuesta puede ser vieja: se ignora
     if(mySeq!==seq||flushing||ops.length)return;
     if(j.state===null){S=initial();mutate(()=>{});return}
-    if(j.state&&j.version>ver){S=j.state;ver=j.version;saveCache();safeRender()}
+    if(j.state&&j.version>ver){rememberRemote(j.state);S=keepLocalMatch(j.state,S);ver=j.version;saveCache();safeRender()}else if(j.state&&!R.loaded)rememberRemote(j.state);
     setSync('ok');
   }catch(e){online=false;setSync('off')}
 }
@@ -628,16 +636,16 @@ function toast(text,icon='check'){
 
 /* ---------- Modo "solo este móvil" ---------- */
 function setLocal(on){ui.local=on;localStorage.setItem('local',on?'1':'0');setSync(online?'ok':'off');render()}
-function goLocal(){localStorage.setItem('localWhich',ui.mode);setLocal(true);toast('Solo este móvil: no gasta créditos. Vuelve a tocar para subirlo','wifiOff')}
-const netBtn=()=>`<button class="btn sm netbtn ${ui.local?'on':''}" data-a="${ui.local?'goLive':'goLocal'}" aria-label="${ui.local?'Volver a en vivo y subir marcador':'Usar solo en este móvil'}" title="${ui.local?'Solo este móvil · toca para subir':'En vivo · toca para usar solo este móvil'}">${ic(ui.local?'wifiOff':'wifi')}</button>`;
+function goLocal(){setLocal(true);toast('Marcador solo en este móvil. Plantilla, parejas y resultados siguen sincronizados','wifiOff')}
+const netBtn=()=>`<button class="btn sm netbtn ${ui.local?'':'on'}" data-a="${ui.local?'goLive':'goLocal'}" aria-label="${ui.local?'Volver a en vivo y subir marcador':'Usar solo en este móvil'}" title="${ui.local?'Marcador local · toca para compartirlo en vivo':'Marcador en vivo · toca para llevarlo solo aquí'}">${ic(ui.local?'wifiOff':'wifi')}</button>`;
 async function goLive(){
   toast('Subiendo el marcador…','reset');
   for(let i=0;i<3;i++){
     try{const r=await fetch('/api/state?fresh='+Date.now(),{cache:'no-store'});const j=await r.json();
-      const base=j.state||initial();base.match=S.match;if(S.beach)base.beach=S.beach;
+      const base=j.state||initial();base.match=S.match;if(S.beach){if(!base.beach)base.beach=S.beach;else base.beach.match=S.beach.match??null}
       const u=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({base:j.version,state:base})});
       const k=await u.json();
-      if(u.ok){base.version=k.version;S=base;ver=k.version;ops=[];saveCache();setLocal(false);toast('Marcador subido: ya lo ven todos','check');return}
+      if(u.ok){base.version=k.version;S=base;ver=k.version;ops=[];rememberRemote(S);setDirty(false);saveCache();setLocal(false);toast('Marcador en vivo: ya lo ven todos','wifi');return}
     }catch(e){}
   }
   toast('No se pudo subir: revisa la conexión','wifiOff')}
@@ -1293,7 +1301,7 @@ document.addEventListener('click',e=>{
       if(!ws){toast('Van empatados: alguien tiene que ir por delante','warn');break}
       const os=other(ws),parts=m.scores.map(x=>`${x[ws]}–${x[os]}`);if(!m.finished&&!s.winner&&(s.A+s.B)>0)parts.push(`${s[ws]}–${s[os]}`);
       const w=m[ws],ref=m.ref,score=parts.join(' · ');
-      const save=()=>{mutate(()=>{applyResult(ref,w,score);eb().match=null});ui.tab='juego';localStorage.setItem('tab_playa','juego');render();window.scrollTo(0,0);setTimeout(()=>{const n=document.querySelector('.bm.next')||document.querySelector('.kingc')||document.querySelector('.resrow');n&&n.scrollIntoView({block:'center',behavior:'smooth'})},120);toast(`Guardado: gana ${pairName(w)} · ${score}`,'trophy')};
+      const save=()=>{mutate(()=>{applyResult(ref,w,score);eb().match=null});setDirty(false);ui.tab='juego';localStorage.setItem('tab_playa','juego');render();window.scrollTo(0,0);setTimeout(()=>{const n=document.querySelector('.bm.next')||document.querySelector('.kingc')||document.querySelector('.resrow');n&&n.scrollIntoView({block:'center',behavior:'smooth'})},120);toast(`Guardado: gana ${pairName(w)} · ${score}`,'trophy')};
       if(m.finished)save();else dialog({icon:'flag',title:'¿Fin del partido?',text:`Gana ${pairName(w)} (${score}). Se guarda en ${refLabel(ref)}.`,ok:'Guardar resultado',cancel:'Seguir jugando'}).then(y=>y&&save());break}
     case 'bSave':{const m=bm();if(!m||!m.finished)break;const w=m[m.finished],ref=m.ref,score=m.scores.map(x=>`${x[m.finished]}–${x[other(m.finished)]}`).join(' · ');
       mutate(()=>{applyResult(ref,w,score);eb().match=null});ui.tab='juego';localStorage.setItem('tab_playa','juego');render();window.scrollTo(0,0);toast(`Guardado: gana ${pairName(w)}`,'trophy');break}

@@ -42,7 +42,7 @@ input,select{font:inherit;color:var(--txt);background:var(--surface2);border:1.5
 input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
 select{appearance:none;-webkit-appearance:none;text-overflow:ellipsis}
 .wrap{max-width:760px;margin:0 auto}
-header{position:sticky;top:0;z-index:5;background:var(--glass);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);padding:calc(var(--st) + 8px) 14px 8px;border-bottom:1px solid var(--line)}
+header{position:sticky;top:0;z-index:5;background:var(--glass);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);padding:calc(var(--st) + 22px) 14px 8px;border-bottom:1px solid var(--line)}
 .hrow{display:flex;align-items:center;gap:10px;padding:0 2px 10px}
 .brand{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
 .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--acc);color:var(--accTxt);display:grid;place-items:center;box-shadow:0 4px 14px color-mix(in srgb,var(--acc) 40%,transparent)}
@@ -120,7 +120,7 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .grid6 button.on{background:var(--acc);color:var(--accTxt);border-color:transparent}
 .grid2{display:block}
 .empty{text-align:center;padding:30px 16px;color:var(--mut)}
-.empty svg.i{width:44px;height:44px;stroke-width:1.5;margin-bottom:8px;color:var(--acc)}
+.empty>svg.i{width:44px;height:44px;stroke-width:1.5;margin-bottom:8px;color:var(--acc)}
 .empty b{display:block;color:var(--txt);font:800 22px/1.1 var(--fd);text-transform:uppercase;margin-bottom:6px}
 
 .capsel{position:relative;display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--line2);border-radius:12px;padding:5px 30px 5px 6px}
@@ -141,6 +141,36 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .localbar.on>svg.i{color:var(--acc)}
 .fslocal{font:700 10px/1.2 var(--fb);color:var(--acc);text-transform:uppercase;text-align:center;letter-spacing:.4px}
 /* ---- playa ---- */
+.brk{overflow-x:auto;margin:0 -14px;padding:4px 14px 14px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scroll-padding:0 14px}
+.brkin{display:flex;gap:30px;width:max-content}
+.bcol{flex:none;width:184px;display:flex;flex-direction:column;scroll-snap-align:start}
+.bhead{font:700 12px/1 var(--fb);color:var(--mut);text-transform:uppercase;letter-spacing:.8px;margin:0 0 10px 2px;height:12px}
+.bcolin{height:var(--H);display:flex;flex-direction:column;justify-content:space-around}
+.bx{position:relative;height:100px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:7px 8px;display:flex;flex-direction:column;gap:3px;box-shadow:var(--shadow)}
+.bcol.fed .bx::before{content:"";position:absolute;left:-31px;width:15px;top:calc(50% - var(--d)/2);height:var(--d);border:2px solid var(--line2);border-left:0;border-radius:0 8px 8px 0}
+.bcol.fed .bx::after{content:"";position:absolute;left:-16px;width:15px;top:50%;border-top:2px solid var(--line2)}
+.bx.done::after,.bx.done::before{border-color:color-mix(in srgb,var(--acc) 55%,var(--line2))}
+.bx.next{border:1.5px dashed var(--acc)}
+.bx.live{border:1.5px solid var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 30%,transparent)}
+.br{display:flex;align-items:center;justify-content:space-between;gap:4px;height:26px;min-width:0}
+.br .pchip{font-size:13px;overflow:hidden;white-space:nowrap}
+.br .pchip i{width:20px;height:20px;font-size:12px}
+.br.w .pchip{font-weight:800}.br.l{opacity:.42}
+.br svg.wk{width:16px;height:16px;color:var(--acc);stroke-width:3;flex:none}
+.qk{flex:none;width:24px;height:24px;border-radius:7px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;color:var(--mut)}
+.qk svg.i{width:13px;height:13px;stroke-width:2.6}
+.tbd{font-size:12px;color:var(--mut);font-style:italic;padding-left:2px}
+.bx.ph{background:transparent;border-style:dashed;box-shadow:none}
+.bplay{margin-top:auto;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:700;font-size:13px;background:var(--surface2);border:1px solid var(--line)}
+.bplay svg.i{width:15px;height:15px}
+.bplay.pri{background:var(--acc);color:var(--accTxt);border-color:transparent}
+.bsc{margin-top:auto;font:700 13px/1 var(--fd);letter-spacing:.4px;color:var(--mut);padding:0 2px 4px}
+.champbox{align-items:center;justify-content:center;text-align:center;gap:6px;border-style:dashed}
+.champbox svg.i{width:28px;height:28px;color:var(--mut)}
+.champbox span{font-size:12px;color:var(--mut);font-style:italic}
+.champbox.won{border:2px solid var(--pc);background:color-mix(in srgb,var(--pc) 16%,var(--surface))}
+.champbox.won svg.i{color:var(--pc)}
+.champbox b{font:800 15px/1.1 var(--fd);text-transform:uppercase}
 .bm{position:relative}
 .bm.next{border-color:var(--acc);border-style:dashed}
 .nexttag{position:absolute;top:-9px;right:10px;font:800 10px/1 var(--fb);letter-spacing:.6px;text-transform:uppercase;background:var(--acc);color:var(--accTxt);padding:4px 8px;border-radius:999px}
@@ -768,13 +798,15 @@ function fsView(){
 const PAIRC=['#22d3ee','#f97316','#a78bfa','#facc15','#34d399','#f472b6','#60a5fa','#fb7185','#a3e635','#e879f9'];
 function newBeach(){return{pairs:[],game:{type:'single',cfg:{points:21,sets:1,decider:15},single:{A:null,B:null},tour:null,king:null,ladder:null,history:[]},match:null}}
 const BB=()=>S.beach||newBeach();
-const eb=()=>{if(!S.beach)S.beach=newBeach();return S.beach};
+const eb=()=>{if(!S.beach)S.beach=newBeach();if(!S.beach.players)S.beach.players=S.players.map(p=>({id:p.id,name:p.name}));return S.beach};
+const BP=()=>BB().players||S.players;
+const bname=id=>BP().find(p=>p.id===id)?.name||'';
 const pairOf=id=>BB().pairs.find(p=>p.id===id);
 const pairNum=id=>BB().pairs.findIndex(p=>p.id===id)+1;
-const pairName=(id,sep=' & ')=>{const p=pairOf(id);return p?`${esc(pname(p.a))}${sep}${esc(pname(p.b))}`:'—'};
+const pairName=(id,sep=' & ')=>{const p=pairOf(id);return p?`${esc(bname(p.a))}${sep}${esc(bname(p.b))}`:'—'};
 const pairColor=id=>{const i=BB().pairs.findIndex(p=>p.id===id);return PAIRC[(i<0?0:i)%PAIRC.length]};
 const pairOfPlayer=pid=>BB().pairs.find(p=>p.a===pid||p.b===pid);
-const freePlayers=()=>{const u=new Set(BB().pairs.flatMap(p=>[p.a,p.b]));return S.players.filter(p=>!u.has(p.id))};
+const freePlayers=()=>{const u=new Set(BB().pairs.flatMap(p=>[p.a,p.b]));return BP().filter(p=>!u.has(p.id))};
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const winsOf=id=>{const g=BB().game,k=g.type==='king'?g.king:g.type==='ladder'?g.ladder:null;return k?(k.wins[id]||0):0};
 function pairChip(id,extra=''){return `<span class="pchip" style="--pc:${pairColor(id)}"><i>${pairNum(id)||'?'}</i>${pairName(id)}${extra}</span>`}
@@ -787,17 +819,17 @@ function pairInGame(id){const g=BB().game;
   if(g.ladder)return true;return false}
 
 /* --- Jugadores --- */
-function vBJugadores(){const n=S.players.length,free=freePlayers().length;
-  let h=`<div class="title"><div><h2>Jugadores</h2><p>${n} en la arena · ${free} sin pareja</p></div><button class="btn pri" data-a="newPlayer" data-beach="1">${ic('userPlus')}Fichar</button></div>
-  <div class="card"><div class="chips">${S.players.map(p=>{const pr=pairOfPlayer(p.id);return `<button class="chip" data-a="editPlayer" data-id="${p.id}" data-beach="1"><span class="av" ${pr?`style="background:${pairColor(pr.id)};color:#062a2a"`:''}>${initialOf(p.name)}</span>${esc(p.name)}</button>`}).join('')||'<span class="mut">Aún no hay nadie. Ficha al primero.</span>'}</div></div>
+function vBJugadores(){const n=BP().length,free=freePlayers().length;
+  let h=`<div class="title"><div><h2>Jugadores</h2><p>${n} en la arena · ${free} sin pareja · lista solo de playa</p></div><button class="btn pri" data-a="newPlayer" data-beach="1">${ic('userPlus')}Fichar</button></div>
+  <div class="card"><div class="chips">${BP().map(p=>{const pr=pairOfPlayer(p.id);return `<button class="chip" data-a="editPlayer" data-id="${p.id}" data-beach="1"><span class="av" ${pr?`style="background:${pairColor(pr.id)};color:#062a2a"`:''}>${initialOf(p.name)}</span>${esc(p.name)}</button>`}).join('')||'<span class="mut">Aún no hay nadie. Ficha al primero.</span>'}</div></div>
   <p class="mut" style="text-align:center">El color indica la pareja de cada uno. Toca un nombre para editarlo.</p>`;return h}
 
 /* --- Parejas --- */
 function vBParejas(){const b=BB(),free=freePlayers();
   let h=`<div class="title"><div><h2>Parejas</h2><p>Toca dos jugadores para emparejarlos</p></div><div class="row" style="gap:6px">${b.pairs.length?`<button class="btn sm ghost danger" data-a="bClearPairs" aria-label="Deshacer todas las parejas">${ic('trash')}Deshacer</button>`:''}${free.length>1?`<button class="btn pri" data-a="bRandPairs">${ic('dice')}Al azar</button>`:''}</div></div>`;
   h+=`<div class="card"><h2>Sin pareja<span class="count">${free.length}</span></h2><div class="chips">${free.map(p=>`<button class="chip ${ui.pick===p.id?'picked':''}" data-a="bPick" data-id="${p.id}"><span class="av">${initialOf(p.name)}</span>${esc(p.name)}</button>`).join('')||'<span class="mut">Todos tienen pareja.</span>'}</div>
-    ${ui.pick?`<p class="mut" style="margin:10px 0 0">Elige con quién juega <b style="color:var(--txt)">${esc(pname(ui.pick))}</b>.</p>`:free.length===1?`<p class="mut" style="margin:10px 0 0">${esc(free[0].name)} queda libre: en Rey de la pista o Ganadores vs ganadores podrá entrar por sorteo.</p>`:''}</div>`;
-  if(b.pairs.length){h+=`<div class="pairs">${b.pairs.map((p,i)=>{const w=winsOf(p.id);return `<div class="pair" style="--pc:${pairColor(p.id)}"><div class="pn">${i+1}</div><div class="pw"><b>${esc(pname(p.a))}</b><b>${esc(pname(p.b))}</b>${w?`<span class="wins">${ic('trophy')}${w} victoria${w===1?'':'s'}</span>`:''}</div><button class="iconbtn" data-a="bUnpair" data-id="${p.id}" aria-label="Separar pareja">${ic('x')}</button></div>`}).join('')}</div>`}
+    ${ui.pick?`<p class="mut" style="margin:10px 0 0">Elige con quién juega <b style="color:var(--txt)">${esc(bname(ui.pick))}</b>.</p>`:free.length===1?`<p class="mut" style="margin:10px 0 0">${esc(free[0].name)} queda libre: en Rey de la pista o Ganadores vs ganadores podrá entrar por sorteo.</p>`:''}</div>`;
+  if(b.pairs.length){h+=`<div class="pairs">${b.pairs.map((p,i)=>{const w=winsOf(p.id);return `<div class="pair" style="--pc:${pairColor(p.id)}"><div class="pn">${i+1}</div><div class="pw"><b>${esc(bname(p.a))}</b><b>${esc(bname(p.b))}</b>${w?`<span class="wins">${ic('trophy')}${w} victoria${w===1?'':'s'}</span>`:''}</div><button class="iconbtn" data-a="bUnpair" data-id="${p.id}" aria-label="Separar pareja">${ic('x')}</button></div>`}).join('')}</div>`}
   else h+=`<div class="card empty">${ic('duo')}<b>Sin parejas</b>Forma la primera tocando dos nombres, o pulsa "Al azar".</div>`;
   return h}
 
@@ -809,17 +841,17 @@ function vBJuego(){const b=BB(),g=b.game,c=g.cfg;
     <div class="seg">${PTS.map(n=>`<button style="flex:1" class="${c.points===n&&!ui.ptsOther?'on':''}" data-a="bPts" data-n="${n}">${n}</button>`).join('')}<button style="flex:1.3" class="${!PTS.includes(c.points)||ui.ptsOther?'on':''}" data-a="bPtsOther">${!PTS.includes(c.points)?c.points+' pts':'Otro'}</button></div>
     ${!PTS.includes(c.points)||ui.ptsOther?`<div class="row" style="margin-top:8px"><input type="number" inputmode="numeric" min="3" max="99" id="bPtsIn" data-a="bPtsCustom" value="${c.points}" style="flex:1" aria-label="Puntos personalizados"><span class="mut">puntos por set</span></div>`:''}
     <div class="lbl">Sets</div><div class="seg">${[[1,'A 1 set'],[3,'Mejor de 3'],[5,'Mejor de 5']].map(([n,l])=>`<button style="flex:1" class="${c.sets===n?'on':''}" data-a="bSets" data-n="${n}">${l}</button>`).join('')}</div>
-    <p class="mut" style="margin:10px 0 0">${c.sets>1?`El ${c.sets}º set (desempate) va a ${dec(c.points)}. `:''}Siempre con 2 puntos de diferencia.${c.points===21?' Cambio de campo cada 7.':c.points===15?' Cambio de campo cada 5.':''}</p></div>`;
+    <p class="mut" style="margin:10px 0 0">${c.sets>1?(c.points===21?`El ${c.sets}º set (desempate) va a 15. `:`Todos los sets a ${c.points}, también el desempate. `):''}Siempre con 2 puntos de diferencia.${c.points===21?' Cambio de campo cada 7.':c.points===15?' Cambio de campo cada 5.':''}</p></div>`;
   const pairs=b.pairs;
   if(pairs.length<2)return h+`<div class="card empty">${ic('duo')}<b>Faltan parejas</b>Necesitas al menos dos en la pestaña Parejas.</div>`;
   if(g.type==='single')h+=vBSingle(); else if(g.type==='tour')h+=vBTour(); else if(g.type==='king')h+=vBKing(); else h+=vBLadder();
   return h}
 const PTS=[7,11,15,21];
-const dec=p=>Math.min(15,p);
+const dec=p=>p===21?15:p;
 const sideEvery=tg=>tg===21?7:tg===15?5:0;
-const pairOpts=(sel,ex)=>BB().pairs.filter(p=>p.id!==ex).map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${pairNum(p.id)}. ${esc(pname(p.a))} & ${esc(pname(p.b))}</option>`).join('');
+const pairOpts=(sel,ex)=>BB().pairs.filter(p=>p.id!==ex).map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${pairNum(p.id)}. ${esc(bname(p.a))} & ${esc(bname(p.b))}</option>`).join('');
 function vBSingle(){const g=BB().game,s=g.single;
-  let h=`<div class="card"><h2>Partido único</h2><div class="vsrow">${['A','B'].map((t,k)=>`${k?'<span class="vsb">VS</span>':''}<button class="pickbtn ${s[t]?'set':''}" style="--pc:${s[t]?pairColor(s[t]):'var(--line2)'}" data-a="bPickPairSheet" data-t="${t}">${s[t]?`<i>${pairNum(s[t])}</i><span>${esc(pname(pairOf(s[t])?.a))}<br>${esc(pname(pairOf(s[t])?.b))}</span>`:`${ic('duo')}<span>Elegir<br>pareja</span>`}</button>`).join('')}</div>
+  let h=`<div class="card"><h2>Partido único</h2><div class="vsrow">${['A','B'].map((t,k)=>`${k?'<span class="vsb">VS</span>':''}<button class="pickbtn ${s[t]?'set':''}" style="--pc:${s[t]?pairColor(s[t]):'var(--line2)'}" data-a="bPickPairSheet" data-t="${t}">${s[t]?`<i>${pairNum(s[t])}</i><span>${esc(bname(pairOf(s[t])?.a))}<br>${esc(bname(pairOf(s[t])?.b))}</span>`:`${ic('duo')}<span>Elegir<br>pareja</span>`}</button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="btn" data-a="bSingleRand">${ic('dice')}Al azar</button><button class="btn pri" style="flex:1" data-a="bPlaySingle" ${s.A&&s.B?'':'disabled'}>${ic('whistle')}Ir al marcador</button></div></div>`;
   if(g.history.length)h+=`<div class="card"><h2>Últimos resultados</h2>${g.history.slice(-5).reverse().map(r=>`<div class="resrow">${pairChip(r.w)}<span class="mut">ganó a</span>${pairChip(r.l)}<b>${r.score||''}</b></div>`).join('')}</div>`;
   return h}
@@ -829,9 +861,20 @@ function vBTour(){const T=BB().game.tour;
   let h='';
   if(T.champion)h+=`<div class="banner pcol" style="--c:${pairColor(T.champion)}"><div class="ic">${ic('trophy')}</div><b>¡Campeones!</b><div class="sc">${pairName(T.champion)}</div></div>`;
   let nx=null;T.rounds.forEach((R,r)=>R.forEach((m,i)=>{if(!nx&&m.B&&!m.w)nx=r+'-'+i}));
-  h+=`<div class="title" style="margin:6px 2px 10px"><div><h2 style="font-size:24px">Cuadro</h2><p>${T.champion?'Torneo terminado':'Toca «Jugar» en el partido destacado'}</p></div></div>`;
-  h+=`<div class="bracket">${T.rounds.map((R,r)=>`<div class="bround"><div class="lbl" style="margin-top:0">${roundName(R.length,r)}</div>${R.map((m,i)=>bMatchCard(m,{type:'tour',r,i},nx===r+'-'+i)).join('')}</div>`).join('')}</div>`;
+  const n0=T.rounds[0].length,NR=Math.round(Math.log2(n0*2)),ROW=118,H=n0*ROW;
+  const cols=[];for(let r=0;r<NR;r++){const n=n0>>r;cols.push(T.rounds[r]||Array.from({length:n},()=>({ph:true})))}
+  h+=`<div class="title" style="margin:6px 2px 10px"><div><h2 style="font-size:24px">Cuadro</h2><p>${T.champion?'Torneo terminado':'Desliza para ver todas las rondas'}</p></div></div>
+  <div class="brk"><div class="brkin" style="--H:${H}px">${cols.map((R,r)=>`<div class="bcol ${r?'fed':''}" style="--d:${ROW*(1<<Math.max(0,r-1))}px"><div class="bhead">${roundName(R.length,r)}</div><div class="bcolin">${R.map((m,i)=>bBox(m,r,i,nx===r+'-'+i)).join('')}</div></div>`).join('')}
+    <div class="bcol fed champ" style="--d:0px"><div class="bhead">Campeón</div><div class="bcolin"><div class="bx champbox ${T.champion?'won':''}" ${T.champion?`style="--pc:${pairColor(T.champion)}"`:''}>${ic('trophy')}${T.champion?`<b>${pairName(T.champion,'<br>')}</b>`:'<span>Por decidir</span>'}</div></div></div></div></div>`;
   h+=`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('x')}Cerrar torneo</button>`;return h}
+function bBox(m,r,i,isNext){
+  if(m.ph)return `<div class="bx ph"><div class="br"><span class="tbd">Por decidir</span></div><div class="br"><span class="tbd">Por decidir</span></div></div>`;
+  if(!m.B)return `<div class="bx bye"><div class="br w">${pairChip(m.A)}</div><div class="br"><span class="tbd">Pasa directa</span></div></div>`;
+  const ref={type:'tour',r,i},rs=JSON.stringify(ref),live=!!BB().match&&JSON.stringify(BB().match.ref)===rs;
+  const sc=m.score?m.score.split(' · '):[];
+  const row=t=>{const id=m[t],won=m.w===id,lost=m.w&&!won;return `<div class="br ${won?'w':''} ${lost?'l':''}">${pairChip(id)}${m.w?(won?ic('check','wk'):''):`<button class="qk" data-a="bQuick" data-ref='${rs}' data-w="${id}" aria-label="Gana">${ic('check')}</button>`}</div>`};
+  return `<div class="bx ${m.w?'done':''} ${live?'live':''} ${isNext&&!live?'next':''}">${row('A')}${row('B')}
+    ${m.w?`<div class="bsc">${m.score||'Sin marcador'}</div>`:`<button class="bplay ${live||isNext?'pri':''}" data-a="bPlay" data-ref='${rs}'>${ic(live?'board':'whistle')}${live?'En juego':isNext?'Jugar':'Jugar'}</button>`}</div>`}
 function bMatchCard(m,ref,isNext){
   if(!m.B)return `<div class="bm done"><div class="bp w">${pairChip(m.A)}</div><div class="mut" style="font-size:12px">Pasa directa</div></div>`;
   const live=!!BB().match&&JSON.stringify(BB().match.ref)===JSON.stringify(ref);
@@ -948,17 +991,17 @@ function vBMarcador(){const m=bm();
       <div class="card"><h2>Orden de saque · set ${s.num}</h2><div class="lbl" style="margin-top:0">Saca primero</div>
       <div class="seg">${order.map(t=>`<button style="flex:1;${s.chosen&&s.serving===t?`background:${pairColor(P[t])};color:#062a2a`:''}" class="${s.chosen&&s.serving===t?'on':''}" data-a="bServe" data-t="${t}">${pairName(P[t],' / ')}</button>`).join('')}</div>
       <div class="lbl">Dentro de cada pareja</div>
-      ${order.map(t=>`<div class="ordrow" style="--pc:${pairColor(P[t])}"><span class="pn2">${pairNum(P[t])}</span><span class="o1">1º ${esc(pname(s.order[t][0]))}</span><button class="iconbtn" data-a="bSwapOrder" data-t="${t}" aria-label="Cambiar orden">${ic('swap')}</button><span class="o2">2º ${esc(pname(s.order[t][1]))}</span></div>`).join('')}
-      <div class="lbl">Secuencia</div><div class="seq">${(()=>{const f=s.serving,o=other(f);return[s.order[f][0],s.order[o][0],s.order[f][1],s.order[o][1]].map((id,i)=>`<span style="--pc:${pairColor(P[i%2?o:f])}"><i>${i+1}</i>${esc(pname(id))}</span>`).join(ic('arrowR','sq'))})()}</div></div>
+      ${order.map(t=>`<div class="ordrow" style="--pc:${pairColor(P[t])}"><span class="pn2">${pairNum(P[t])}</span><span class="o1">1º ${esc(bname(s.order[t][0]))}</span><button class="iconbtn" data-a="bSwapOrder" data-t="${t}" aria-label="Cambiar orden">${ic('swap')}</button><span class="o2">2º ${esc(bname(s.order[t][1]))}</span></div>`).join('')}
+      <div class="lbl">Secuencia</div><div class="seq">${(()=>{const f=s.serving,o=other(f);return[s.order[f][0],s.order[o][0],s.order[f][1],s.order[o][1]].map((id,i)=>`<span style="--pc:${pairColor(P[i%2?o:f])}"><i>${i+1}</i>${esc(bname(id))}</span>`).join(ic('arrowR','sq'))})()}</div></div>
       <button class="btn pri full big" data-a="bStart" ${s.chosen?'':'disabled'}>${ic('whistle')}${s.chosen?`Empezar set ${s.num}`:'Primero sortea el saque'}</button>`;return h}
   const sv=server(),every=sideEvery(bTarget());
   const side=t=>{const id=P[t];return `<div class="side bside" style="--c:${pairColor(id)}"><div class="nm">${pairName(id,' / ')}</div>
     <div class="sets">${Array.from({length:bNeed()},(_,i)=>`<i class="${i<m.setsWon[t]?'w':''}"></i>`).join('')}</div>
-    <div class="srvb">${s.serving===t?`<span>${ic('ball')}${esc(pname(sv))}</span>`:''}</div>
+    <div class="srvb">${s.serving===t?`<span>${ic('ball')}${esc(bname(sv))}</span>`:''}</div>
     <div class="pts" id="bpts${t}">${s[t]}</div>
     <button class="plus" data-a="bAdd" data-t="${t}" aria-label="Sumar">${ic('plus')}1</button>
     <button class="minus" data-a="bSub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>
-    ${s.serving===t?'':`<div class="mut" style="font-size:12px">Luego saca ${esc(pname(s.order[t][s.served[t]?s.idx[t]^1:s.idx[t]]))}</div>`}</div>`};
+    ${s.serving===t?'':`<div class="mut" style="font-size:12px">Luego saca ${esc(bname(s.order[t][s.served[t]?s.idx[t]^1:s.idx[t]]))}</div>`}</div>`};
   h+=`<div class="board">${side(order[0])}<div class="mid"><button class="swap ${every&&(s.A+s.B)>0&&(s.A+s.B)%every===0?'alert':''}" data-a="bSwapSides" aria-label="Cambio de campo">${ic('swap')}</button><div class="setlbl">${every?`Cambio<br>cada ${every}`:'Cambio<br>de campo'}</div></div>${side(order[1])}</div>`;
   h+=`<button class="btn sm ghost" data-a="bEditOrder" style="display:flex;margin:14px auto 0">${ic('edit')}Corregir quién saca</button>`;
   return h}
@@ -970,9 +1013,9 @@ function renderSheet(){
   let h='';
   const head=t=>`<div class="grab"></div><div class="shead"><h3>${t}</h3><button class="iconbtn" data-a="close" aria-label="Cerrar">${ic('x')}</button></div>`;
   if(sh.k==='player'){
-    const p=sh.id?S.players.find(x=>x.id===sh.id):null;
+    const p=sh.id?(sh.beach?BP():S.players).find(x=>x.id===sh.id):null;
     if(sh.id&&!p){ui.sheet=null;el.innerHTML='';return}
-    const pos=sh.pos;
+    const pos=sh.pos||[];
     h=head(p?'Editar jugador':'Nuevo fichaje')+`
       <input id="pName" placeholder="¿Cómo se llama?" value="${esc(sh.name)}" autocomplete="off" enterkeyhint="done">
       <div id="pErr"></div>
@@ -980,9 +1023,9 @@ function renderSheet(){
       <div class="chk">${POS.map(([k])=>`<label><input type="checkbox" data-a="posChk" value="${k}" ${pos.includes(k)?'checked':''}>${POSL[k]}</label>`).join('')}</div>`}
       <div class="row" style="margin-top:20px">${p?`<button class="btn danger" data-a="delPlayer" aria-label="Borrar">${ic('trash')}</button>`:''}<button class="btn pri" style="flex:1" data-a="savePlayer">${ic('check')}${p?'Guardar cambios':'Fichar'}</button></div>`;
   }else if(sh.k==='bpair'){const g=BB().game.single,ex=g[other(sh.t)];
-    h=head(sh.t==='A'?'Primera pareja':'Segunda pareja')+`<div class="pairs">${BB().pairs.map(p=>{const dis=p.id===ex;return `<button class="pair pickrow ${g[sh.t]===p.id?'on':''}" style="--pc:${pairColor(p.id)}" data-a="bChoosePair" data-id="${p.id}" ${dis?'disabled':''}><div class="pn">${pairNum(p.id)}</div><div class="pw"><b>${esc(pname(p.a))}</b><b>${esc(pname(p.b))}</b>${dis?'<span class="mut" style="font-size:12px">Ya está en el otro lado</span>':''}</div>${g[sh.t]===p.id?ic('check'):''}</button>`}).join('')}</div>`;
+    h=head(sh.t==='A'?'Primera pareja':'Segunda pareja')+`<div class="pairs">${BB().pairs.map(p=>{const dis=p.id===ex;return `<button class="pair pickrow ${g[sh.t]===p.id?'on':''}" style="--pc:${pairColor(p.id)}" data-a="bChoosePair" data-id="${p.id}" ${dis?'disabled':''}><div class="pn">${pairNum(p.id)}</div><div class="pw"><b>${esc(bname(p.a))}</b><b>${esc(bname(p.b))}</b>${dis?'<span class="mut" style="font-size:12px">Ya está en el otro lado</span>':''}</div>${g[sh.t]===p.id?ic('check'):''}</button>`}).join('')}</div>`;
   }else if(sh.k==='bsrv'){const m=bm();if(!m||!m.set.started){ui.sheet=null;el.innerHTML='';return}const s=m.set,cur=server();
-    h=head('¿Quién saca ahora?')+`<div class="srvlist">${['A','B'].flatMap(t=>s.order[t].map((id,k)=>`<button class="${id===cur?'on':''}" style="--pc:${pairColor(m[t])}" data-a="bSetServer" data-t="${t}" data-k="${k}">${esc(pname(id))}</button>`)).join('')}</div>
+    h=head('¿Quién saca ahora?')+`<div class="srvlist">${['A','B'].flatMap(t=>s.order[t].map((id,k)=>`<button class="${id===cur?'on':''}" style="--pc:${pairColor(m[t])}" data-a="bSetServer" data-t="${t}" data-k="${k}">${esc(bname(id))}</button>`)).join('')}</div>
       <p class="mut" style="margin:12px 0 14px">Toca quién está sacando. A partir de ahí la app sigue el orden.</p><button class="btn pri full" data-a="close">${ic('check')}Listo</button>`;
   }else if(sh.k==='rot'){
     const t=sh.t,s=S.match.set;
@@ -1005,6 +1048,7 @@ function render(){
   document.getElementById('fs').innerHTML=ui.fs&&ui.mode==='pista'?fsView():'';document.body.classList.toggle('fs-on',!!ui.fs);
   if(ui.sheet&&ui.sheet.k==='rot')renderSheet();
   maybeCoin();maybeBCoin();maybeLap();
+  if(ui.mode==='playa'&&!(S.beach&&S.beach.players)&&!ui.migr){ui.migr=true;setTimeout(()=>mutate(()=>{eb()}),0)}
 }
 
 
@@ -1187,7 +1231,7 @@ document.addEventListener('click',e=>{
     case 'goTab':ui.tab=el.dataset.k;localStorage.setItem('tab_'+ui.mode,ui.tab);render();window.scrollTo(0,0);break;
     case 'bPick':{if(!ui.pick){ui.pick=id;render();break}
       if(ui.pick===id){ui.pick=null;render();break}
-      const a=ui.pick,b2=id;ui.pick=null;const pid=uid();mutate(()=>{const B=eb();if(!pairOfPlayer(a)&&!pairOfPlayer(b2))B.pairs.push({id:pid,a,b:b2})});toast(`Nueva pareja: ${esc(pname(a))} & ${esc(pname(b2))}`,'duo');break}
+      const a=ui.pick,b2=id;ui.pick=null;const pid=uid();mutate(()=>{const B=eb();if(!pairOfPlayer(a)&&!pairOfPlayer(b2))B.pairs.push({id:pid,a,b:b2})});toast(`Nueva pareja: ${esc(bname(a))} & ${esc(bname(b2))}`,'duo');break}
     case 'bRandPairs':{const f=shuffle(freePlayers().map(p=>p.id)),np=[];for(let i=0;i+1<f.length;i+=2)np.push({id:uid(),a:f[i],b:f[i+1]});
       ui.pick=null;mutate(()=>{const B=eb();for(const p of np)if(!pairOfPlayer(p.a)&&!pairOfPlayer(p.b))B.pairs.push(p)});toast(`${np.length} pareja${np.length===1?'':'s'} sorteada${np.length===1?'':'s'}${f.length%2?' · uno queda libre':''}`,'dice');break}
     case 'bUnpair':{if(gameActive()&&pairInGame(id)){toast('Esta pareja está jugando: reinicia el juego antes','warn');break}
@@ -1207,7 +1251,7 @@ document.addEventListener('click',e=>{
     case 'bLadderRound':{const r=ladderNextRound();mutate(()=>{const g=eb().game;if(!g.ladder)g.ladder={rounds:[],wins:{},played:{}};g.ladder.rounds.push(r)});toast(`Ronda ${(BB().game.ladder?.rounds.length)||1} sorteada`,'ladder');break}
     case 'bGameReset':{const t=BB().game.type;dialog({icon:'x',tone:'danger',title:`¿Cerrar el ${GNAME[t]}?`,text:'Se borran los cruces y las victorias. Las parejas se mantienen y podrás empezar otro juego.',ok:'Cerrar juego',cancel:'Seguir'}).then(y=>{if(y){mutate(()=>{const g=eb().game;g[t]=null;if(eb().match&&eb().match.ref.type===t)eb().match=null});toast('Juego cerrado','x')}});break}
     case 'bSwapFree':{const f=freePlayers()[0],pr=pairOf(id);if(!f||!pr)break;const k=Math.random()<.5?'a':'b',out=pr[k];
-      mutate(()=>{const P=pairOf(id);if(P&&!pairOfPlayer(f.id))P[k]=f.id});toast(`Descansa ${esc(pname(out))} · entra ${esc(f.name)}`,'dice');break}
+      mutate(()=>{const P=pairOf(id);if(P&&!pairOfPlayer(f.id))P[k]=f.id});toast(`Descansa ${esc(bname(out))} · entra ${esc(f.name)}`,'dice');break}
     case 'bPlaySingle':case 'bPlay':{const ref=a==='bPlaySingle'?{type:'single'}:JSON.parse(el.dataset.ref);
       const go=()=>{const[A,B2]=refPairs(ref);if(!A||!B2)return;const sv=Math.random()<.5?'A':'B';mutate(()=>bStartMatch(ref,A,B2,sv));ui.tab='bmarcador';localStorage.setItem('tab_playa','bmarcador');render();window.scrollTo(0,0)};
       const cur=bm();if(cur&&JSON.stringify(cur.ref)!==JSON.stringify(ref)){dialog({icon:'board',title:'Hay un partido abierto',text:'Termínalo con «Fin del partido» (o cancélalo) antes de empezar otro.',ok:'Ir al marcador',cancel:'Cerrar'}).then(y=>{if(y){ui.tab='bmarcador';render();window.scrollTo(0,0)}})}
@@ -1221,7 +1265,7 @@ document.addEventListener('click',e=>{
     case 'bDrawServe':{const m=bm();if(!m||m.set.started||bCoinBusy)break;const w=Math.random()<.5?'A':'B',ts=Date.now();lastBDrawn=ts;
       mutate(()=>{const M=eb().match;if(M&&!M.set.started){const st=M.set;st.serving=w;st.firstServe=w;st.served={A:false,B:false,[w]:true};st.chosen=true;st.drawn=ts}});bCoin(m[w],m[other(w)]);break}
     case 'bSwapOrder':mutate(()=>{const m=eb().match;if(m&&!m.set.started)m.set.order[t]=[m.set.order[t][1],m.set.order[t][0]]});break;
-    case 'bStart':if(!bm()?.set.chosen)break;mutate(()=>{const m=eb().match;if(m&&!m.set.started){m.set.started=true;m.set.firstServe=m.set.serving;m.set.served={A:false,B:false,[m.set.serving]:true};m.set.idx={A:0,B:0}}});toast(`¡Saca ${esc(pname(server()))}!`,'whistle');break;
+    case 'bStart':if(!bm()?.set.chosen)break;mutate(()=>{const m=eb().match;if(m&&!m.set.started){m.set.started=true;m.set.firstServe=m.set.serving;m.set.served={A:false,B:false,[m.set.serving]:true};m.set.idx={A:0,B:0}}});toast(`¡Saca ${esc(bname(server()))}!`,'whistle');break;
     case 'bSwapSides':mutate(()=>{const m=eb().match;if(m)m.swapped=!m.swapped});break;
     case 'bEditOrder':ui.sheet={k:'bsrv'};renderSheet();break;
     case 'bSetServer':{const k=+el.dataset.k;mutate(()=>{const s=eb().match.set;s.serving=t;s.idx[t]=k;s.served[t]=true});renderSheet();break}
@@ -1254,15 +1298,18 @@ document.addEventListener('click',e=>{
     case 'assign':mutate(S=>{for(const x of['A','B'])if(x!==t)removeFromTeam(x,id);if(t&&!S.teams[t].members.includes(id))S.teams[t].members.push(id)});break;
     case 'clearTeams':dialog({icon:'shield',tone:'danger',title:'¿Deshacer los equipos?',text:'Todos vuelven al banquillo menos los capitanes. Tocará elegir otra vez.',ok:'Deshacer equipos',cancel:'Mejor no'}).then(y=>{if(y){toast('Equipos deshechos','bench');mutate(S=>{for(const x of['A','B']){const T=S.teams[x];for(const m of[...T.members])if(m!==T.captain)removeFromTeam(x,m)}})}});break;
     case 'newPlayer':ui.sheet={k:'player',id:null,name:'',pos:[],beach:!!el.dataset.beach};renderSheet();setTimeout(()=>document.getElementById('pName')?.focus(),50);break;
-    case 'editPlayer':{const p=S.players.find(x=>x.id===id);ui.sheet={k:'player',id,name:p.name,pos:[...p.pos],beach:!!el.dataset.beach};renderSheet();break}
+    case 'editPlayer':{const bch=!!el.dataset.beach,p=(bch?BP():S.players).find(x=>x.id===id);ui.sheet={k:'player',id,name:p.name,pos:[...(p.pos||[])],beach:bch};renderSheet();break}
     case 'posChk':break;
     case 'savePlayer':{const sh=ui.sheet;const name=document.getElementById('pName').value.trim();if(!name){const i=document.getElementById('pName');i.classList.remove('shake');void i.offsetWidth;i.classList.add('shake');i.focus();document.getElementById('pErr').innerHTML=`<div class="err">${ic('warn')}Falta el nombre del jugador</div>`;return}
-      const pos=sh.beach?(S.players.find(x=>x.id===sh.id)?.pos||[]):[...document.querySelectorAll('[data-a=posChk]:checked')].map(x=>x.value);
+      if(sh.beach){if(sh.id){toast(`${esc(name)} actualizado`);mutate(()=>{const p=eb().players.find(x=>x.id===sh.id);if(p)p.name=name})}else{const nid=uid();mutate(()=>{eb().players.push({id:nid,name})});toast(`Fichado para playa: ${esc(name)}`,'userPlus')}ui.sheet=null;renderSheet();break}
+      const pos=[...document.querySelectorAll('[data-a=posChk]:checked')].map(x=>x.value);
       if(sh.id){toast(`${esc(name)} actualizado`);mutate(S=>{const p=S.players.find(x=>x.id===sh.id);if(p){p.name=name;p.pos=pos}})}
       else{const nid=uid();mutate(S=>{S.players.push({id:nid,name,pos})});toast(`Fichado: ${esc(name)}`,'userPlus')}
       ui.sheet=null;renderSheet();break}
-    case 'delPlayer':{const pid=ui.sheet.id;const p=S.players.find(x=>x.id===pid);
-      dialog({icon:'trash',tone:'danger',title:`¿Borrar a ${esc(p?.name)}?`,text:'Desaparece de la plantilla y de su equipo. Si solo cambia de posición, mejor edítalo.',ok:'Borrar',cancel:'Mejor no'}).then(y=>{if(y){mutate(S=>{S.players=S.players.filter(x=>x.id!==pid);if(S.beach){S.beach.pairs=S.beach.pairs.filter(p=>p.a!==pid&&p.b!==pid)}for(const x of['A','B']){removeFromTeam(x,pid);if(S.teams[x].captain===pid)S.teams[x].captain=null}});ui.sheet=null;renderSheet();toast(`${esc(p?.name)} ya no está en la plantilla`,'trash')}});break}
+    case 'delPlayer':{const pid=ui.sheet.id;
+      if(ui.sheet.beach){const bp=BP().find(x=>x.id===pid);dialog({icon:'trash',tone:'danger',title:`¿Borrar a ${esc(bp?.name)}?`,text:'Sale de los jugadores de playa y se deshace su pareja. En pista no cambia nada.',ok:'Borrar',cancel:'Mejor no'}).then(y=>{if(y){mutate(()=>{const B=eb();B.players=B.players.filter(x=>x.id!==pid);B.pairs=B.pairs.filter(q=>q.a!==pid&&q.b!==pid)});ui.sheet=null;renderSheet();toast(`${esc(bp?.name)} ya no juega en playa`,'trash')}});break}
+      const p=S.players.find(x=>x.id===pid);
+      dialog({icon:'trash',tone:'danger',title:`¿Borrar a ${esc(p?.name)}?`,text:'Desaparece de la plantilla y de su equipo. Si solo cambia de posición, mejor edítalo.',ok:'Borrar',cancel:'Mejor no'}).then(y=>{if(y){mutate(S=>{S.players=S.players.filter(x=>x.id!==pid);for(const x of['A','B']){removeFromTeam(x,pid);if(S.teams[x].captain===pid)S.teams[x].captain=null}});ui.sheet=null;renderSheet();toast(`${esc(p?.name)} ya no está en la plantilla`,'trash')}});break}
     case 'resetAll':dialog({icon:'reset',tone:'danger',title:'¿Volver al principio?',text:'Se recupera la plantilla original y se pierden fichajes, equipos, rotaciones y marcador. Afecta a todos los móviles.',ok:'Restablecer todo',cancel:'Cancelar'}).then(y=>{if(y){mutate(S=>{const n=initial();n.version=S.version;Object.assign(S,n)});toast('Plantilla restablecida','reset')}});break;
     case 'close':ui.sheet=null;renderSheet();break;
   }

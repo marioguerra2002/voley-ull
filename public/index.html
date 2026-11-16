@@ -96,7 +96,7 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .teamhead{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tbox{border-radius:14px;padding:12px;background:color-mix(in srgb,var(--c) 12%,var(--surface2));border:1.5px solid color-mix(in srgb,var(--c) 45%,transparent)}
 .tbox.A{--c:var(--A)}.tbox.B{--c:var(--B)}
-.tbox input{background:transparent;border:0;padding:0;font:800 17px/1.1 var(--fd);text-transform:uppercase;letter-spacing:.3px;box-shadow:none}
+.tbox .old{background:transparent;border:0;padding:0;font:800 17px/1.1 var(--fd);text-transform:uppercase;letter-spacing:.3px;box-shadow:none}
 .tbox .cnt{font-size:12px;color:var(--mut);margin-top:4px;display:flex;align-items:center;gap:6px}
 .tbox .cnt i{width:8px;height:8px;border-radius:50%;background:var(--c)}
 .court{position:relative;background:linear-gradient(var(--court1),var(--court2));border-radius:14px;padding:24px 8px 8px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;color:#2b1503;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35)}
@@ -122,6 +122,17 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .empty{text-align:center;padding:30px 16px;color:var(--mut)}
 .empty svg.i{width:44px;height:44px;stroke-width:1.5;margin-bottom:8px;color:var(--acc)}
 .empty b{display:block;color:var(--txt);font:800 22px/1.1 var(--fd);text-transform:uppercase;margin-bottom:6px}
+
+.capsel{position:relative;display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--line2);border-radius:12px;padding:5px 30px 5px 6px}
+.capsel select{border:0;background:transparent;padding:4px 0;font-weight:700;box-shadow:none}
+.capsel .chev{position:absolute;right:9px;width:16px;height:16px;transform:rotate(90deg);color:var(--mut);pointer-events:none}
+.tname{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line2);border-radius:12px;padding:4px 4px 4px 11px;cursor:text}
+.tname:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+.tname input{flex:1;min-width:0;border:0;background:transparent;padding:6px 0;font:800 17px/1.1 var(--fd);text-transform:uppercase;letter-spacing:.3px;box-shadow:none!important}
+.tname .pen{width:32px;height:32px;flex:none;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+.tname .pen svg.i{width:16px;height:16px}
+.tbox .cnt{margin-top:10px}
+@media (max-width:520px){.teamhead{grid-template-columns:1fr}}
 /* marcador */
 .sbhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
 .setpill{display:flex;align-items:baseline;gap:8px}
@@ -480,9 +491,16 @@ function vPlantilla(){
 function teamOf(id){return S.teams.A.members.includes(id)?'A':S.teams.B.members.includes(id)?'B':null}
 function vEquipos(){
   const A=S.teams.A,B=S.teams.B;
-  const tb=(t,T)=>`<div class="tbox ${t}"><input data-a="teamName" data-t="${t}" value="${esc(T.name)}" aria-label="Nombre del equipo"><div class="cnt"><i></i>${T.members.length} jugador${T.members.length===1?'':'es'}${T.captain?` · cap. ${esc(pname(T.captain))}`:''}</div></div>`;
-  let h=`<div class="title"><div><h2>Equipos</h2><p>Los capitanes eligen: asigna a cada jugador</p></div></div>
-    <div class="card"><div class="teamhead">${tb('A',A)}${tb('B',B)}</div></div><div class="grid2">`;
+  const tb=(t,T)=>{const o=S.teams[other(t)].captain;
+    return `<div class="tbox ${t}">
+      <div class="lbl" style="margin:0 0 6px">Capitán</div>
+      <div class="capsel"><span class="av ${t}">${initialOf(pname(T.captain)||'?')}</span>
+        <select data-a="captain" data-t="${t}" aria-label="Capitán de ${esc(T.name)}"><option value="">Sin capitán</option>${S.players.filter(p=>p.id!==o).map(p=>`<option value="${p.id}" ${p.id===T.captain?'selected':''}>${esc(p.name)}</option>`).join('')}</select>${ic('arrowR','chev')}</div>
+      <div class="lbl" style="margin:12px 0 6px">Nombre del equipo</div>
+      <label class="tname"><input id="tn${t}" data-a="teamName" data-t="${t}" value="${esc(T.name)}" aria-label="Nombre del equipo" enterkeyhint="done"><button class="pen" data-a="editName" data-t="${t}" aria-label="Cambiar nombre">${ic('edit')}</button></label>
+      <div class="cnt"><i></i>${T.members.length} jugador${T.members.length===1?'':'es'}</div></div>`};
+  let h=`<div class="title"><div><h2>Equipos</h2><p>Elige capitanes y después asigna a cada jugador</p></div></div>
+    <div class="card"><h2>Capitanes</h2><div class="teamhead">${tb('A',A)}${tb('B',B)}</div></div><div class="grid2">`;
   const short=t=>esc(S.teams[t].name.replace(/^Equipo\s+/i,'').slice(0,8)||t);
   const seen=new Set();
   for(const[k,label]of POS){
@@ -814,6 +832,7 @@ document.addEventListener('click',e=>{
   switch(a){
     case 'add':if(tapGuard('add'+t))break;mutate(()=>addPoint(t));{const e=document.getElementById('pts'+t);if(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}}if(navigator.vibrate)navigator.vibrate(15);break;
     case 'sub':if(tapGuard('sub'+t))break;mutate(()=>subPoint(t));break;
+    case 'editName':{e.preventDefault();const i=document.getElementById('tn'+t);if(i){i.focus();i.select()}break}
     case 'fsOn':fsEnter();break;
     case 'fsOff':fsExit();break;
     case 'swap':mutate(S=>{S.match.swapped=!S.match.swapped});toast('Cambio de campo','swap');break;
@@ -844,9 +863,14 @@ document.addEventListener('click',e=>{
     case 'close':ui.sheet=null;renderSheet();break;
   }
 });
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset?.a==='teamName')e.target.blur()});
 document.addEventListener('change',e=>{
   const el=e.target;const a=el.dataset.a,t=el.dataset.t,sc=el.dataset.sc;if(!a)return;
-  if(a==='teamName'){const v=el.value.trim()||('Equipo '+t);mutate(S=>{S.teams[t].name=v})}
+  if(a==='teamName'){const v=el.value.trim()||('Equipo '+(pname(S.teams[t].captain)||t));mutate(S=>{S.teams[t].name=v});toast(`Ahora se llama ${esc(v)}`,'edit')}
+  else if(a==='captain'){const v=el.value||null;mutate(S=>{const T=S.teams[t];
+      if(v){for(const x of['A','B'])if(x!==t)removeFromTeam(x,v);if(!T.members.includes(v))T.members.push(v);T.name='Equipo '+pname(v)}
+      T.captain=v});
+    if(v)toast(`${esc(pname(v))} capitanea · ${esc(S.teams[t].name)}`,'shield')}
   else if(a==='zone'){const z=+el.dataset.z,v=el.value;mutate(S=>{
       if(sc==='set'){const s=S.match.set;placeZone(s.court[t],z,v);const i=s.setter[t]?s.court[t].indexOf(s.setter[t]):-1;if(i>=0)s.rot[t]=i+1}
       else placeZone(S.teams[t].court,z,v)});if(sc==='set')renderSheet()}

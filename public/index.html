@@ -141,6 +141,11 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .localbar.on>svg.i{color:var(--acc)}
 .fslocal{font:700 10px/1.2 var(--fb);color:var(--acc);text-transform:uppercase;text-align:center;letter-spacing:.4px}
 /* ---- playa ---- */
+.bm{position:relative}
+.bm.next{border-color:var(--acc);border-style:dashed}
+.nexttag{position:absolute;top:-9px;right:10px;font:800 10px/1 var(--fb);letter-spacing:.6px;text-transform:uppercase;background:var(--acc);color:var(--accTxt);padding:4px 8px;border-radius:999px}
+.bm .score{display:flex;align-items:center;gap:6px;font:700 14px/1 var(--fd);letter-spacing:.4px;color:var(--mut)}
+.bm .score svg.i{width:14px;height:14px;color:var(--acc)}
 .lap{display:flex;flex-direction:column;align-items:center;gap:5px;margin:10px auto 0;max-width:280px}
 .lapbar{width:100%;height:7px;border-radius:4px;background:var(--surface2);overflow:hidden}
 .lapbar i{display:block;height:100%;background:var(--acc);border-radius:4px;transition:width .4s}
@@ -774,7 +779,8 @@ function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Ma
 const winsOf=id=>{const g=BB().game,k=g.type==='king'?g.king:g.type==='ladder'?g.ladder:null;return k?(k.wins[id]||0):0};
 function pairChip(id,extra=''){return `<span class="pchip" style="--pc:${pairColor(id)}"><i>${pairNum(id)||'?'}</i>${pairName(id)}${extra}</span>`}
 const GAMES=[['single','ball','Partido único','Dos parejas, un partido'],['tour','trophy','Torneo','Cuadro eliminatorio al azar'],['king','crown','Rey de la pista','El que gana se queda'],['ladder','ladder','Ganadores vs ganadores','Por rondas, ganadores con ganadores']];
-function gameActive(){const g=BB().game;return (g.type==='tour'&&g.tour&&!g.tour.champion)||(g.type==='king'&&g.king)||(g.type==='ladder'&&g.ladder)}
+function gameActive(){const g=BB().game;return (g.type==='tour'&&g.tour&&!g.tour.champion)||(g.type==='king'&&g.king)||(g.type==='ladder'&&g.ladder)||(g.type==='single'&&BB().match&&BB().match.ref.type==='single')}
+const GNAME={single:'partido',tour:'torneo',king:'rey de la pista',ladder:'ganadores vs ganadores'};
 function pairInGame(id){const g=BB().game;
   if(g.tour)return g.tour.rounds.some(r=>r.some(m=>m.A===id||m.B===id));
   if(g.king)return g.king.king===id||g.king.queue.includes(id);
@@ -822,14 +828,16 @@ function vBTour(){const T=BB().game.tour;
   if(!T)return `<div class="card"><h2>Torneo</h2><p class="mut" style="margin:0 0 12px">Se sortea el cuadro eliminatorio con las ${BB().pairs.length} parejas. Si no cuadran, algunas pasan directas a la siguiente ronda.</p><button class="btn pri full" data-a="bTourNew">${ic('dice')}Sortear cuadro</button></div>`;
   let h='';
   if(T.champion)h+=`<div class="banner pcol" style="--c:${pairColor(T.champion)}"><div class="ic">${ic('trophy')}</div><b>¡Campeones!</b><div class="sc">${pairName(T.champion)}</div></div>`;
-  h+=`<div class="bracket">${T.rounds.map((R,r)=>`<div class="bround"><div class="lbl" style="margin-top:0">${roundName(R.length,r)}</div>${R.map((m,i)=>bMatchCard(m,{type:'tour',r,i})).join('')}</div>`).join('')}</div>`;
-  h+=`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('reset')}Reiniciar torneo</button>`;return h}
-function bMatchCard(m,ref){
+  let nx=null;T.rounds.forEach((R,r)=>R.forEach((m,i)=>{if(!nx&&m.B&&!m.w)nx=r+'-'+i}));
+  h+=`<div class="title" style="margin:6px 2px 10px"><div><h2 style="font-size:24px">Cuadro</h2><p>${T.champion?'Torneo terminado':'Toca «Jugar» en el partido destacado'}</p></div></div>`;
+  h+=`<div class="bracket">${T.rounds.map((R,r)=>`<div class="bround"><div class="lbl" style="margin-top:0">${roundName(R.length,r)}</div>${R.map((m,i)=>bMatchCard(m,{type:'tour',r,i},nx===r+'-'+i)).join('')}</div>`).join('')}</div>`;
+  h+=`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('x')}Cerrar torneo</button>`;return h}
+function bMatchCard(m,ref,isNext){
   if(!m.B)return `<div class="bm done"><div class="bp w">${pairChip(m.A)}</div><div class="mut" style="font-size:12px">Pasa directa</div></div>`;
   const live=!!BB().match&&JSON.stringify(BB().match.ref)===JSON.stringify(ref);
   const side=t=>{const id=m[t];return `<div class="bp ${m.w===id?'w':m.w?'l':''}">${pairChip(id,winsOf(id)&&ref.type!=='tour'?`<em>${winsOf(id)}</em>`:'')}${!m.w?`<button class="btn sm" data-a="bQuick" data-ref='${JSON.stringify(ref)}' data-w="${id}" aria-label="Gana esta pareja">${ic('check')}</button>`:''}</div>`};
-  return `<div class="bm ${m.w?'done':''} ${live?'live':''}">${side('A')}${side('B')}
-    ${m.w?`<div class="mut" style="font-size:12px">${m.score||'Resultado anotado'}</div>`:`<button class="btn sm ${live?'pri':''} full" data-a="bPlay" data-ref='${JSON.stringify(ref)}'>${ic('board')}${live?'En juego · ver marcador':'Jugar con marcador'}</button>`}</div>`}
+  return `<div class="bm ${m.w?'done':''} ${live?'live':''} ${isNext&&!live?'next':''}">${isNext&&!live?'<span class="nexttag">Siguiente</span>':''}${side('A')}${side('B')}
+    ${m.w?`<div class="score">${ic('check')}${m.score||'Ganador anotado sin marcador'}</div>`:`<button class="btn sm ${live||isNext?'pri':''} full" data-a="bPlay" data-ref='${JSON.stringify(ref)}'>${ic(live?'board':'whistle')}${live?'En juego · ver marcador':isNext?'Jugar siguiente partido':'Jugar'}</button>`}</div>`}
 function rankCard(K){const L=K.laps,ids=BB().pairs.map(p=>p.id).sort((a,b)=>((L?.[b]||0)-(L?.[a]||0))||(K.wins[b]||0)-(K.wins[a]||0)||(K.played[a]||0)-(K.played[b]||0));
   return `<div class="card"><h2>Clasificación</h2>${ids.map((id,i)=>`<div class="rank"><span class="rp">${i+1}</span>${pairChip(id)}<span class="rw">${L?`<span class="lapc ${L[id]?'':'z'}" title="Vueltas">${ic('flag')}${L[id]||0}</span>`:''}<b>${K.wins[id]||0}</b> V · ${K.played[id]||0} J</span></div>`).join('')}
   ${L?`<p class="mut" style="margin:10px 0 0">${ic('flag','inl')} vueltas (ganar seguidas a todas) · V victorias · J jugados</p>`:''}</div>`}
@@ -847,14 +855,14 @@ function vBKing(){const K=BB().game.king;
     <div class="row" style="margin-top:14px"><button class="btn" style="flex:1" data-a="bQuick" data-ref='{"type":"king"}' data-w="${K.king}">${ic('check')}Gana rey</button><button class="btn" style="flex:1" data-a="bQuick" data-ref='{"type":"king"}' data-w="${ch}">${ic('check')}Gana aspirante</button></div>
     <button class="btn pri full" data-a="bPlay" data-ref='{"type":"king"}' style="margin-top:8px">${ic('board')}Jugar con marcador</button></div>`;
   h+=`<div class="card"><h2>Cola</h2><div class="queue">${K.queue.map((id,i)=>`<div class="qi">${i===0?'<span class="tag cap">Ahora</span>':`<span class="tag">${i+1}º</span>`}${pairChip(id,`<em>${K.wins[id]||0}</em>`)}</div>`).join('')}</div></div>`;
-  h+=freeCard(ch)+rankCard(K)+`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('reset')}Terminar y reiniciar</button>`;return h}
+  h+=freeCard(ch)+rankCard(K)+`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('x')}Cerrar juego</button>`;return h}
 function vBLadder(){const L=BB().game.ladder;
   if(!L)return `<div class="card"><h2>Ganadores vs ganadores</h2><p class="mut" style="margin:0 0 12px">Primera ronda al azar. Después, los ganadores juegan entre sí y los perdedores entre sí, ronda tras ronda.</p><button class="btn pri full" data-a="bLadderRound">${ic('dice')}Sortear primera ronda</button></div>`;
   const R=L.rounds[L.rounds.length-1],done=R.m.every(m=>m.w),next=R.m.find(m=>!m.w);
-  let h=`<div class="card"><h2>Ronda ${L.rounds.length}<span class="count">${R.m.filter(m=>m.w).length}/${R.m.length}</span></h2>${R.m.map((m,i)=>bMatchCard(m,{type:'ladder',i})).join('')}
+  let h=`<div class="card"><h2>Ronda ${L.rounds.length}<span class="count">${R.m.filter(m=>m.w).length}/${R.m.length}</span></h2>${R.m.map((m,i)=>bMatchCard(m,{type:'ladder',i},m===next)).join('')}
     ${R.rest.length?`<p class="mut" style="margin:10px 0 0">Descansa: ${R.rest.map(id=>pairChip(id)).join(' ')}</p>`:''}
     ${done?`<button class="btn pri full" data-a="bLadderRound" style="margin-top:12px">${ic('arrowR')}Siguiente ronda</button>`:''}</div>`;
-  h+=freeCard(next?(next.A):null)+rankCard(L)+`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('reset')}Terminar y reiniciar</button>`;return h}
+  h+=freeCard(next?(next.A):null)+rankCard(L)+`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('x')}Cerrar juego</button>`;return h}
 
 /* --- Lógica de modalidades (deterministas: el azar se calcula fuera de mutate) --- */
 function tourCreate(order){const n=order.length;let size=1;while(size<n)size*=2;const byes=size-n,R=[];
@@ -927,9 +935,9 @@ const server=()=>{const s=bm().set;return s.order[s.serving][s.idx[s.serving]]};
 function vBMarcador(){const m=bm();
   if(!m)return `<div class="title"><div><h2>Marcador</h2><p>Arena de playa</p></div></div><div class="card empty">${ic('board')}<b>No hay partido en juego</b>Empieza uno desde la pestaña Juego.<br><br><button class="btn pri" data-a="goTab" data-k="juego">${ic('trophy')}Ir a Juego</button></div>`;
   const s=m.set,order=m.swapped?['B','A']:['A','B'],P={A:m.A,B:m.B};
-  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${m.cfg.sets>1&&s.num===m.cfg.sets?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">${refLabel(m.ref)} · a ${bTarget()}</div></div><button class="btn sm" data-a="bAbandon">${ic('x')}<span class="hide-xs">Cancelar</span></button></div>`;
+  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${m.cfg.sets>1&&s.num===m.cfg.sets?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">${refLabel(m.ref)} · a ${bTarget()}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-a="bAbandon" aria-label="Cancelar partido">${ic('x')}</button><button class="btn sm pri" data-a="bEnd">${ic('flag')}Fin del partido</button></div></div>`;
   if(m.scores.length)h+=`<div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>`;
-  if(m.finished){const w=P[m.finished];h+=`<div class="banner pcol" style="--c:${pairColor(w)}"><div class="ic">${ic('trophy')}</div><b>¡Gana ${pairName(w)}!</b><div class="sc">${m.scores.map(x=>`${x[m.finished]}–${x[other(m.finished)]}`).join(' · ')}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${m.finished}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bSave">${ic('check')}Guardar resultado</button></div></div>`}
+  if(m.finished){const w=P[m.finished];h+=`<div class="banner pcol" style="--c:${pairColor(w)}"><div class="ic">${ic('trophy')}</div><b>¡Gana ${pairName(w)}!</b><div class="sc">${m.scores.map(x=>`${x[m.finished]}–${x[other(m.finished)]}`).join(' · ')}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${m.finished}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bEnd">${ic('flag')}Fin del partido · guardar</button></div></div>`}
   else if(s.winner)h+=`<div class="banner pcol" style="--c:${pairColor(P[s.winner])}"><div class="ic">${ic('flag')}</div><b>Set para ${pairName(P[s.winner])}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bNextSet">Siguiente set${ic('arrowR')}</button></div></div>`;
   if(!s.started){
     const needDraw=!s.chosen;
@@ -1185,7 +1193,9 @@ document.addEventListener('click',e=>{
     case 'bUnpair':{if(gameActive()&&pairInGame(id)){toast('Esta pareja está jugando: reinicia el juego antes','warn');break}
       mutate(()=>{const B=eb();B.pairs=B.pairs.filter(p=>p.id!==id)});toast('Pareja separada','x');break}
     case 'bClearPairs':dialog({icon:'duo',tone:'danger',title:'¿Deshacer las parejas?',text:'Todos quedan sin pareja y se reinician el torneo, el rey de la pista y las rondas.',ok:'Deshacer todas',cancel:'Mejor no'}).then(y=>{if(y){mutate(()=>{const B=eb();B.pairs=[];const g=B.game;g.tour=g.king=g.ladder=null;g.single={A:null,B:null};B.match=null});toast('Parejas deshechas','duo')}});break;
-    case 'bGame':{const k=el.dataset.k;mutate(()=>{eb().game.type=k});break}
+    case 'bGame':{const k=el.dataset.k,g=BB().game;if(k===g.type)break;
+      if(gameActive()){const cur=g.type;dialog({icon:'warn',title:`Hay un ${GNAME[cur]} abierto`,text:`Para no tener varios juegos a la vez, cierra el ${GNAME[cur]} antes de empezar ${k==='tour'?'un torneo':k==='single'?'un partido':k==='king'?'rey de la pista':'ganadores vs ganadores'}. Se pierden sus cruces y victorias.`,ok:`Cerrar ${GNAME[cur]}`,cancel:'Seguir con él'}).then(y=>{if(y){mutate(()=>{const G=eb().game;if(cur!=='single')G[cur]=null;if(eb().match&&eb().match.ref.type===cur)eb().match=null;G.type=k});toast(`Cerrado. Ahora: ${GNAME[k]}`,'check')}});break}
+      mutate(()=>{eb().game.type=k});break}
     case 'bPts':{const n=+el.dataset.n;ui.ptsOther=false;mutate(()=>{eb().game.cfg.points=n});break}
     case 'bPtsOther':ui.ptsOther=true;render();setTimeout(()=>{const i=document.getElementById('bPtsIn');if(i){i.focus();i.select()}},50);break;
     case 'bSets':{const n=+el.dataset.n;mutate(()=>{eb().game.cfg.sets=n});break}
@@ -1195,12 +1205,12 @@ document.addEventListener('click',e=>{
     case 'bTourNew':{const o=shuffle(BB().pairs.map(p=>p.id));mutate(()=>{eb().game.tour=tourCreate(o)});toast('¡Cuadro sorteado!','trophy');break}
     case 'bKingNew':{const o=shuffle(BB().pairs.map(p=>p.id));mutate(()=>{eb().game.king={king:o[0],queue:o.slice(1),wins:{},played:{},laps:{},games:0,streak:0}});toast(`Empieza de rey: ${pairName(o[0])}`,'crown');break}
     case 'bLadderRound':{const r=ladderNextRound();mutate(()=>{const g=eb().game;if(!g.ladder)g.ladder={rounds:[],wins:{},played:{}};g.ladder.rounds.push(r)});toast(`Ronda ${(BB().game.ladder?.rounds.length)||1} sorteada`,'ladder');break}
-    case 'bGameReset':{const t=BB().game.type;dialog({icon:'reset',tone:'danger',title:'¿Reiniciar?',text:'Se borran los cruces y las victorias de esta modalidad. Las parejas se mantienen.',ok:'Reiniciar',cancel:'Cancelar'}).then(y=>{if(y){mutate(()=>{const g=eb().game;g[t]=null;if(eb().match&&eb().match.ref.type===t)eb().match=null});toast('Reiniciado','reset')}});break}
+    case 'bGameReset':{const t=BB().game.type;dialog({icon:'x',tone:'danger',title:`¿Cerrar el ${GNAME[t]}?`,text:'Se borran los cruces y las victorias. Las parejas se mantienen y podrás empezar otro juego.',ok:'Cerrar juego',cancel:'Seguir'}).then(y=>{if(y){mutate(()=>{const g=eb().game;g[t]=null;if(eb().match&&eb().match.ref.type===t)eb().match=null});toast('Juego cerrado','x')}});break}
     case 'bSwapFree':{const f=freePlayers()[0],pr=pairOf(id);if(!f||!pr)break;const k=Math.random()<.5?'a':'b',out=pr[k];
       mutate(()=>{const P=pairOf(id);if(P&&!pairOfPlayer(f.id))P[k]=f.id});toast(`Descansa ${esc(pname(out))} · entra ${esc(f.name)}`,'dice');break}
     case 'bPlaySingle':case 'bPlay':{const ref=a==='bPlaySingle'?{type:'single'}:JSON.parse(el.dataset.ref);
       const go=()=>{const[A,B2]=refPairs(ref);if(!A||!B2)return;const sv=Math.random()<.5?'A':'B';mutate(()=>bStartMatch(ref,A,B2,sv));ui.tab='bmarcador';localStorage.setItem('tab_playa','bmarcador');render();window.scrollTo(0,0)};
-      const cur=bm();if(cur&&!cur.finished&&(cur.set.A+cur.set.B+cur.scores.length)>0&&JSON.stringify(cur.ref)!==JSON.stringify(ref)){dialog({icon:'board',title:'Hay un partido a medias',text:'Si empiezas otro, se pierde el marcador del actual.',ok:'Empezar otro',cancel:'Volver'}).then(y=>y&&go())}
+      const cur=bm();if(cur&&JSON.stringify(cur.ref)!==JSON.stringify(ref)){dialog({icon:'board',title:'Hay un partido abierto',text:'Termínalo con «Fin del partido» (o cancélalo) antes de empezar otro.',ok:'Ir al marcador',cancel:'Cerrar'}).then(y=>{if(y){ui.tab='bmarcador';render();window.scrollTo(0,0)}})}
       else if(cur&&JSON.stringify(cur.ref)===JSON.stringify(ref)){ui.tab='bmarcador';render()}else go();break}
     case 'bQuick':{const ref=JSON.parse(el.dataset.ref),w=el.dataset.w;dialog({icon:'check',title:`¿Gana ${pairName(w)}?`,text:'Se anota el resultado sin marcador.',ok:'Anotar',cancel:'Cancelar'}).then(y=>{if(y){mutate(()=>{applyResult(ref,w,'');const M=eb().match;if(M&&JSON.stringify(M.ref)===JSON.stringify(ref))eb().match=null});toast(`Victoria para ${pairName(w)}`,'trophy')}});break}
     case 'bAdd':if(tapGuard('b'+t))break;mutate(()=>bAdd(t));{const e2=document.getElementById('bpts'+t);if(e2){e2.classList.remove('bump');void e2.offsetWidth;e2.classList.add('bump')}
@@ -1216,6 +1226,13 @@ document.addEventListener('click',e=>{
     case 'bEditOrder':ui.sheet={k:'bsrv'};renderSheet();break;
     case 'bSetServer':{const k=+el.dataset.k;mutate(()=>{const s=eb().match.set;s.serving=t;s.idx[t]=k;s.served[t]=true});renderSheet();break}
     case 'bAbandon':dialog({icon:'x',tone:'danger',title:'¿Cancelar el partido?',text:'Se borra este marcador sin guardar resultado.',ok:'Cancelar partido',cancel:'Seguir jugando'}).then(y=>{if(y){mutate(()=>{eb().match=null});toast('Partido cancelado','x')}});break;
+    case 'bEnd':{const m=bm();if(!m)break;const s=m.set;let ws=m.finished;
+      if(!ws){if(m.setsWon.A!==m.setsWon.B)ws=m.setsWon.A>m.setsWon.B?'A':'B';else if(s.A!==s.B)ws=s.A>s.B?'A':'B'}
+      if(!ws){toast('Van empatados: alguien tiene que ir por delante','warn');break}
+      const os=other(ws),parts=m.scores.map(x=>`${x[ws]}–${x[os]}`);if(!m.finished&&!s.winner&&(s.A+s.B)>0)parts.push(`${s[ws]}–${s[os]}`);
+      const w=m[ws],ref=m.ref,score=parts.join(' · ');
+      const save=()=>{mutate(()=>{applyResult(ref,w,score);eb().match=null});ui.tab='juego';localStorage.setItem('tab_playa','juego');render();window.scrollTo(0,0);setTimeout(()=>{const n=document.querySelector('.bm.next')||document.querySelector('.kingc')||document.querySelector('.resrow');n&&n.scrollIntoView({block:'center',behavior:'smooth'})},120);toast(`Guardado: gana ${pairName(w)} · ${score}`,'trophy')};
+      if(m.finished)save();else dialog({icon:'flag',title:'¿Fin del partido?',text:`Gana ${pairName(w)} (${score}). Se guarda en ${refLabel(ref)}.`,ok:'Guardar resultado',cancel:'Seguir jugando'}).then(y=>y&&save());break}
     case 'bSave':{const m=bm();if(!m||!m.finished)break;const w=m[m.finished],ref=m.ref,score=m.scores.map(x=>`${x[m.finished]}–${x[other(m.finished)]}`).join(' · ');
       mutate(()=>{applyResult(ref,w,score);eb().match=null});ui.tab='juego';localStorage.setItem('tab_playa','juego');render();window.scrollTo(0,0);toast(`Guardado: gana ${pairName(w)}`,'trophy');break}
     case 'goLocal':goLocal();break;

@@ -141,6 +141,26 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .localbar.on>svg.i{color:var(--acc)}
 .fslocal{font:700 10px/1.2 var(--fb);color:var(--acc);text-transform:uppercase;text-align:center;letter-spacing:.4px}
 /* ---- playa ---- */
+.drawc.need{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 30%,transparent),var(--shadow)}
+.drawres{display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--pc) 18%,var(--surface2));border:1.5px solid var(--pc);border-radius:14px;padding:10px 10px 10px 12px}
+.drawres>svg.i{width:26px;height:26px;color:var(--pc)}
+.drawres div{flex:1;display:flex;flex-direction:column;gap:2px}.drawres span{font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.drawres b{font:800 18px/1.1 var(--fd);text-transform:uppercase}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.bcoin{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at 50% 45%,#0d3b3a,#020a0c 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;perspective:1100px;opacity:0;transition:opacity .2s;overflow:hidden}
+.bcoin.show{opacity:1}
+.bct{position:absolute;top:calc(var(--st) + 40px);font:800 15px/1 var(--fb);letter-spacing:4px;text-transform:uppercase;color:#2dd4bf}
+.bcw{position:relative;width:min(64vw,260px);height:min(64vw,260px)}
+.bco{position:absolute;inset:0;transform-style:preserve-3d}
+.bface{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;
+  background:radial-gradient(circle at 35% 30%,#fff8,transparent 40%),var(--pc);border:9px solid #f8e7b0;box-shadow:inset 0 0 0 5px #c9a44a,inset 0 0 40px rgba(0,0,0,.3);color:#062a2a;padding:20px}
+.bface.b{transform:rotateY(180deg)}
+.bface b{font:900 clamp(60px,20vw,90px)/1 var(--fd)}
+.bface span{font:800 15px/1.1 var(--fd);text-transform:uppercase}
+.bcs{position:absolute;left:15%;right:15%;bottom:-36px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);filter:blur(8px)}
+.bcr{margin-top:70px;text-align:center;opacity:0;padding:0 16px;color:#fff;display:flex;flex-direction:column;gap:8px}
+.bcr b{font:900 clamp(28px,9vw,44px)/1.05 var(--fd);text-transform:uppercase;font-style:italic}
+.bcr span{font-size:13px;opacity:.7}
 .banner.pcol{background:var(--c);color:#062a2a}
 .banner.pcol .ic{background:rgba(0,0,0,.1)}
 .banner.pcol .btn{background:rgba(0,0,0,.1);border-color:rgba(0,0,0,.15);color:#062a2a}
@@ -787,7 +807,7 @@ function vBTour(){const T=BB().game.tour;
   h+=`<button class="btn sm ghost danger" data-a="bGameReset" style="display:flex;margin:14px auto 0">${ic('reset')}Reiniciar torneo</button>`;return h}
 function bMatchCard(m,ref){
   if(!m.B)return `<div class="bm done"><div class="bp w">${pairChip(m.A)}</div><div class="mut" style="font-size:12px">Pasa directa</div></div>`;
-  const live=BB().match&&!BB().match.saved&&JSON.stringify(BB().match.ctx.ref)===JSON.stringify(ref)&&BB().match.ctx.type===ref.type;
+  const live=!!BB().match&&JSON.stringify(BB().match.ref)===JSON.stringify(ref);
   const side=t=>{const id=m[t];return `<div class="bp ${m.w===id?'w':m.w?'l':''}">${pairChip(id,winsOf(id)&&ref.type!=='tour'?`<em>${winsOf(id)}</em>`:'')}${!m.w?`<button class="btn sm" data-a="bQuick" data-ref='${JSON.stringify(ref)}' data-w="${id}" aria-label="Gana esta pareja">${ic('check')}</button>`:''}</div>`};
   return `<div class="bm ${m.w?'done':''} ${live?'live':''}">${side('A')}${side('B')}
     ${m.w?`<div class="mut" style="font-size:12px">${m.score||'Resultado anotado'}</div>`:`<button class="btn sm ${live?'pri':''} full" data-a="bPlay" data-ref='${JSON.stringify(ref)}'>${ic('board')}${live?'En juego · ver marcador':'Jugar con marcador'}</button>`}</div>`}
@@ -844,9 +864,27 @@ function refPairs(ref){const g=BB().game;
 function refLabel(ref){if(ref.type==='single')return'Partido único';if(ref.type==='king')return'Rey de la pista';if(ref.type==='ladder')return'Ganadores vs ganadores · ronda '+BB().game.ladder.rounds.length;
   const T=BB().game.tour;return'Torneo · '+roundName(T.rounds[ref.r].length,ref.r)}
 
+
+/* --- Moneda del sorteo de saque (playa) --- */
+let bCoinBusy=false,lastBDrawn=null;
+function bCoin(w,l){if(bCoinBusy)return;bCoinBusy=true;
+  const ov=document.createElement('div');ov.className='bcoin';const face=(id,cls)=>`<div class="bface ${cls}" style="--pc:${pairColor(id)}"><b>${pairNum(id)}</b><span>${pairName(id,'<br>')}</span></div>`;
+  ov.innerHTML=`<div class="bct">Sorteo de saque</div><div class="bcw"><div class="bco">${face(w,'f')}${face(l,'b')}</div><div class="bcs"></div></div><div class="bcr"><b>¡Saca ${pairName(w)}!</b><span>Toca para continuar</span></div>`;
+  document.body.appendChild(ov);requestAnimationFrame(()=>ov.classList.add('show'));if(navigator.vibrate)navigator.vibrate(30);
+  const co=ov.querySelector('.bco'),D=2200;
+  co.animate([{transform:'translateY(30vh) rotateY(0) scale(.4)'},{transform:'translateY(-22vh) rotateY(1620deg) scale(1.1)',offset:.5},{transform:'translateY(0) rotateY(3240deg) scale(1)',offset:.9},{transform:'translateY(-2vh) rotateY(3240deg) scale(1.04)',offset:.95},{transform:'translateY(0) rotateY(3240deg) scale(1)'}],{duration:D,easing:'cubic-bezier(.25,.6,.35,1)',fill:'forwards'});
+  ov.querySelector('.bcs').animate([{transform:'scale(.3)',opacity:.2},{transform:'scale(.4)',opacity:.2,offset:.5},{transform:'scale(1)',opacity:1}],{duration:D,fill:'forwards'});
+  const t1=setTimeout(()=>{if(navigator.vibrate)navigator.vibrate([50,40,100]);ov.querySelector('.bcr').animate([{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{duration:400,easing:'cubic-bezier(.2,1.4,.4,1)',fill:'forwards'});
+    for(let i=0;i<50;i++){const c=document.createElement('div');c.className='conf';c.style.background=[pairColor(w),'#fff','#2dd4bf'][i%3];ov.appendChild(c);const a=Math.random()*6.28,r=120+Math.random()*260,x=Math.cos(a)*r,y=Math.sin(a)*r-120;
+      c.animate([{transform:'translate(-50%,-50%)',opacity:1},{transform:`translate(${x}px,${y}px) rotate(${Math.random()*720}deg)`,opacity:1,offset:.6},{transform:`translate(${x}px,${y+280}px)`,opacity:0}],{duration:1500+Math.random()*700,easing:'cubic-bezier(.1,.7,.3,1)',fill:'forwards'})}},D);
+  const close=()=>{clearTimeout(t1);clearTimeout(t2);ov.classList.remove('show');setTimeout(()=>{ov.remove();bCoinBusy=false},220)};const t2=setTimeout(close,D+2600),st=Date.now();
+  ov.addEventListener('click',()=>{if(Date.now()-st>D)close()})}
+function maybeBCoin(){const m=S&&S.beach&&S.beach.match;const d=m&&m.set.drawn;if(lastBDrawn===null){lastBDrawn=d||0;return}
+  if(d&&d!==lastBDrawn){lastBDrawn=d;if(!m.set.started&&ui.mode==='playa')bCoin(m[m.set.serving],m[other(m.set.serving)])}}
+
 /* --- Marcador de playa --- */
-function newBSet(num,serving,order,started){return{num,A:0,B:0,serving,firstServe:serving,started,order,idx:{A:0,B:0},served:{A:false,B:false,[serving]:true},hist:[],winner:null}}
-function bStartMatch(ref,A,B,serving){const g=eb().game,pa=pairOf(A),pb=pairOf(B);const quick=ref.type==='king'||ref.type==='ladder';
+function newBSet(num,serving,order,started,chosen=false){return{num,A:0,B:0,serving,firstServe:serving,started,chosen,drawn:null,order,idx:{A:0,B:0},served:{A:false,B:false,[serving]:true},hist:[],winner:null}}
+function bStartMatch(ref,A,B,serving){const g=eb().game,pa=pairOf(A),pb=pairOf(B);const quick=ref.type==='king';
   eb().match={ref,A,B,cfg:{...g.cfg},setsWon:{A:0,B:0},scores:[],swapped:false,finished:null,set:newBSet(1,serving,{A:[pa.a,pa.b],B:[pb.a,pb.b]},quick)}}
 const bm=()=>BB().match;
 const bTarget=()=>{const m=bm();return m.cfg.sets===3&&m.set.num===3?m.cfg.decider:m.cfg.points};
@@ -857,8 +895,8 @@ function bAdd(t){const m=eb().match;if(!m)return;const s=m.set;if(!s.started||s.
   if(s.serving!==t){s.serving=t;if(s.served[t])s.idx[t]^=1;else s.served[t]=true}s.hist.push({t,prev});bCheck()}
 function bSub(t){const m=eb().match;if(!m)return;const s=m.set;if(!s.started||s[t]<=0)return;bUnwin();const i=s.hist.map(h=>h.t).lastIndexOf(t);
   if(i>=0&&i===s.hist.length-1){const h=s.hist.pop();s[t]--;s.serving=h.prev.serving;s.idx=h.prev.idx;s.served=h.prev.served}else{if(i>=0)s.hist.splice(i,1);s[t]--}bCheck()}
-function bNextSet(){const m=eb().match;if(!m||m.finished||!m.set.winner)return;const quick=m.ref.type==='king'||m.ref.type==='ladder';
-  m.set=newBSet(m.set.num+1,other(m.set.firstServe),m.set.order,quick);m.swapped=!m.swapped}
+function bNextSet(){const m=eb().match;if(!m||m.finished||!m.set.winner)return;const quick=m.ref.type==='king',decider=m.cfg.sets===3&&m.set.num+1===3;
+  m.set=newBSet(m.set.num+1,other(m.set.firstServe),m.set.order,quick,!decider);m.swapped=!m.swapped}
 const server=()=>{const s=bm().set;return s.order[s.serving][s.idx[s.serving]]};
 function vBMarcador(){const m=bm();
   if(!m)return `<div class="title"><div><h2>Marcador</h2><p>Arena de playa</p></div></div><div class="card empty">${ic('board')}<b>No hay partido en juego</b>Empieza uno desde la pestaña Juego.<br><br><button class="btn pri" data-a="goTab" data-k="juego">${ic('trophy')}Ir a Juego</button></div>`;
@@ -868,12 +906,17 @@ function vBMarcador(){const m=bm();
   if(m.finished){const w=P[m.finished];h+=`<div class="banner pcol" style="--c:${pairColor(w)}"><div class="ic">${ic('trophy')}</div><b>¡Gana ${pairName(w)}!</b><div class="sc">${m.scores.map(x=>`${x[m.finished]}–${x[other(m.finished)]}`).join(' · ')}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${m.finished}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bSave">${ic('check')}Guardar resultado</button></div></div>`}
   else if(s.winner)h+=`<div class="banner pcol" style="--c:${pairColor(P[s.winner])}"><div class="ic">${ic('flag')}</div><b>Set para ${pairName(P[s.winner])}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bNextSet">Siguiente set${ic('arrowR')}</button></div></div>`;
   if(!s.started){
-    h+=`<div class="card"><h2>Orden de saque · set ${s.num}</h2><div class="lbl" style="margin-top:0">Saca primero</div>
-      <div class="seg">${order.map(t=>`<button style="flex:1;${s.serving===t?`background:${pairColor(P[t])};color:#062a2a`:''}" class="${s.serving===t?'on':''}" data-a="bServe" data-t="${t}">${pairName(P[t],' / ')}</button>`).join('')}</div>
+    const needDraw=!s.chosen;
+    h+=`<div class="card drawc ${needDraw?'need':''}"><h2>Sorteo de saque · set ${s.num}</h2>
+      ${needDraw?`<p class="mut" style="margin:0 0 12px">${s.num===1?'Antes de empezar se sortea qué pareja saca.':'Set de desempate: se vuelve a sortear el saque.'}</p>
+        <button class="btn pri full big" data-a="bDrawServe">${ic('dice')}Sortear saque</button><p class="mut" style="text-align:center;margin:10px 0 0">o elígelo a mano aquí debajo</p>`
+      :`<div class="drawres" style="--pc:${pairColor(P[s.serving])}">${ic(s.drawn?'dice':'ball')}<div><span>${s.drawn?'Sorteo':s.num===2?'Cambia el saque':'Elegido a mano'}</span><b>Saca ${pairName(P[s.serving])}</b></div>${s.drawn?`<button class="iconbtn" data-a="bDrawServe" aria-label="Repetir sorteo">${ic('reset')}</button>`:''}</div>`}</div>
+      <div class="card"><h2>Orden de saque · set ${s.num}</h2><div class="lbl" style="margin-top:0">Saca primero</div>
+      <div class="seg">${order.map(t=>`<button style="flex:1;${s.chosen&&s.serving===t?`background:${pairColor(P[t])};color:#062a2a`:''}" class="${s.chosen&&s.serving===t?'on':''}" data-a="bServe" data-t="${t}">${pairName(P[t],' / ')}</button>`).join('')}</div>
       <div class="lbl">Dentro de cada pareja</div>
       ${order.map(t=>`<div class="ordrow" style="--pc:${pairColor(P[t])}"><span class="pn2">${pairNum(P[t])}</span><span class="o1">1º ${esc(pname(s.order[t][0]))}</span><button class="iconbtn" data-a="bSwapOrder" data-t="${t}" aria-label="Cambiar orden">${ic('swap')}</button><span class="o2">2º ${esc(pname(s.order[t][1]))}</span></div>`).join('')}
       <div class="lbl">Secuencia</div><div class="seq">${(()=>{const f=s.serving,o=other(f);return[s.order[f][0],s.order[o][0],s.order[f][1],s.order[o][1]].map((id,i)=>`<span style="--pc:${pairColor(P[i%2?o:f])}"><i>${i+1}</i>${esc(pname(id))}</span>`).join(ic('arrowR','sq'))})()}</div></div>
-      <button class="btn pri full big" data-a="bStart">${ic('whistle')}Empezar set ${s.num}</button>`;return h}
+      <button class="btn pri full big" data-a="bStart" ${s.chosen?'':'disabled'}>${ic('whistle')}${s.chosen?`Empezar set ${s.num}`:'Primero sortea el saque'}</button>`;return h}
   const sv=server(),every=bTarget()>=21?7:5;
   const side=t=>{const id=P[t];return `<div class="side bside" style="--c:${pairColor(id)}"><div class="nm">${pairName(id,' / ')}</div>
     <div class="sets">${Array.from({length:bNeed()},(_,i)=>`<i class="${i<m.setsWon[t]?'w':''}"></i>`).join('')}</div>
@@ -925,7 +968,7 @@ function render(){
   if(ui.lastTab!==ui.tab){app.classList.remove('view');void app.offsetWidth;app.classList.add('view');ui.lastTab=ui.tab}
   document.getElementById('fs').innerHTML=ui.fs&&ui.mode==='pista'?fsView():'';document.body.classList.toggle('fs-on',!!ui.fs);
   if(ui.sheet&&ui.sheet.k==='rot')renderSheet();
-  maybeCoin();
+  maybeCoin();maybeBCoin();
 }
 
 
@@ -1133,9 +1176,11 @@ document.addEventListener('click',e=>{
       const m=bm();if(m&&m.set.started&&!m.set.winner){const sum=m.set.A+m.set.B,ev=bTarget()>=21?7:5;if(sum%ev===0){toast('Cambio de campo','swap');if(navigator.vibrate)navigator.vibrate([40,40,40])}}}break;
     case 'bSub':if(tapGuard('bs'+t))break;mutate(()=>bSub(t));break;
     case 'bNextSet':mutate(()=>bNextSet());break;
-    case 'bServe':mutate(()=>{const m=eb().match;if(m&&!m.set.started){m.set.serving=t;m.set.firstServe=t;m.set.served={A:false,B:false,[t]:true}}});break;
+    case 'bServe':mutate(()=>{const m=eb().match;if(m&&!m.set.started){m.set.serving=t;m.set.firstServe=t;m.set.served={A:false,B:false,[t]:true};m.set.chosen=true;m.set.drawn=null}});break;
+    case 'bDrawServe':{const m=bm();if(!m||m.set.started||bCoinBusy)break;const w=Math.random()<.5?'A':'B',ts=Date.now();lastBDrawn=ts;
+      mutate(()=>{const M=eb().match;if(M&&!M.set.started){const st=M.set;st.serving=w;st.firstServe=w;st.served={A:false,B:false,[w]:true};st.chosen=true;st.drawn=ts}});bCoin(m[w],m[other(w)]);break}
     case 'bSwapOrder':mutate(()=>{const m=eb().match;if(m&&!m.set.started)m.set.order[t]=[m.set.order[t][1],m.set.order[t][0]]});break;
-    case 'bStart':mutate(()=>{const m=eb().match;if(m&&!m.set.started){m.set.started=true;m.set.firstServe=m.set.serving;m.set.served={A:false,B:false,[m.set.serving]:true};m.set.idx={A:0,B:0}}});toast(`¡Saca ${esc(pname(server()))}!`,'whistle');break;
+    case 'bStart':if(!bm()?.set.chosen)break;mutate(()=>{const m=eb().match;if(m&&!m.set.started){m.set.started=true;m.set.firstServe=m.set.serving;m.set.served={A:false,B:false,[m.set.serving]:true};m.set.idx={A:0,B:0}}});toast(`¡Saca ${esc(pname(server()))}!`,'whistle');break;
     case 'bSwapSides':mutate(()=>{const m=eb().match;if(m)m.swapped=!m.swapped});break;
     case 'bEditOrder':ui.sheet={k:'bsrv'};renderSheet();break;
     case 'bSetServer':{const k=+el.dataset.k;mutate(()=>{const s=eb().match.set;s.serving=t;s.idx[t]=k;s.served[t]=true});renderSheet();break}

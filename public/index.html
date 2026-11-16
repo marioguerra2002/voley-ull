@@ -133,6 +133,13 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .tname .pen svg.i{width:16px;height:16px}
 .tbox .cnt{margin-top:10px}
 @media (max-width:520px){.teamhead{grid-template-columns:1fr}}
+.localbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px dashed var(--line2);border-radius:14px;padding:9px 10px 9px 12px;margin-bottom:12px}
+.localbar>svg.i{color:var(--mut)}
+.localbar div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.localbar b{font-size:13.5px}.localbar span{font-size:12px;color:var(--mut)}
+.localbar.on{border-style:solid;border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,var(--surface))}
+.localbar.on>svg.i{color:var(--acc)}
+.fslocal{font:700 10px/1.2 var(--fb);color:var(--acc);text-transform:uppercase;text-align:center;letter-spacing:.4px}
 /* marcador */
 .sbhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
 .setpill{display:flex;align-items:baseline;gap:8px}
@@ -382,13 +389,14 @@ function removeFromTeam(t,id){const T=S.teams[t];T.members=T.members.filter(x=>x
 
 /* ---------- Sincronización ---------- */
 let S=null,ver=0,ops=[],flushing=false,online=true,dirtyRender=false,seq=0;
-const ui={tab:localStorage.getItem('tab')||'marcador',rotTeam:'A',sheet:null};
+const ui={tab:localStorage.getItem('tab')||'marcador',rotTeam:'A',sheet:null,local:localStorage.getItem('local')==='1'};
 function setSync(state){const d=document.getElementById('dot'),t=document.getElementById('syncTxt');
+  if(ui.local){d.className='dot busy';d.style.animation='none';t.textContent='Solo este móvil';return}d.style.animation='';
   d.className='dot'+(state==='off'?' off':state==='busy'?' busy':'');t.textContent=state==='off'?'Sin conexión':state==='busy'?'Guardando':'En vivo'}
 // Cada cambio lleva un id; el estado guarda los últimos ids aplicados para no aplicarlo dos veces
 function applyOp(st,op){st.applied=st.applied||[];if(st.applied.includes(op.id))return;op.fn(st);st.applied.push(op.id);if(st.applied.length>200)st.applied.splice(0,st.applied.length-200)}
 function saveCache(){try{localStorage.setItem('cache',JSON.stringify({S,ver}))}catch(e){}}
-function mutate(fn){if(!S)return;seq++;const op={id:uid()+uid(),fn};applyOp(S,op);ops.push(op);saveCache();render();flush()}
+function mutate(fn){if(!S)return;if(ui.local){fn(S);saveCache();render();return}seq++;const op={id:uid()+uid(),fn};applyOp(S,op);ops.push(op);saveCache();render();flush()}
 async function flush(){
   if(flushing||!ops.length)return;flushing=true;setSync('busy');
   const sent=ops.length;
@@ -404,15 +412,15 @@ async function flush(){
   if(online&&ops.length)flush();
 }
 async function poll(){
-  if(flushing)return;
+  if(flushing||document.hidden||ui.local)return;
   if(ops.length){flush();return}
   const mySeq=seq;
   try{
-    const r=await fetch('/api/state?v='+ver,{cache:'no-store'});const j=await r.json();online=true;
+    const r=await fetch('/api/state',{cache:'no-store'});const j=await r.json();online=true;
     // Si mientras esperábamos hubo un cambio local o un guardado, esta respuesta puede ser vieja: se ignora
     if(mySeq!==seq||flushing||ops.length)return;
     if(j.state===null){S=initial();mutate(()=>{});return}
-    if(!j.same&&j.state&&j.version>ver){S=j.state;ver=j.version;saveCache();safeRender()}
+    if(j.state&&j.version>ver){S=j.state;ver=j.version;saveCache();safeRender()}
     setSync('ok');
   }catch(e){online=false;setSync('off')}
 }
@@ -471,6 +479,23 @@ function toast(text,icon='check'){
   const box=document.getElementById('toasts');const t=document.createElement('div');t.className='toast';t.innerHTML=ic(icon)+`<span>${text}</span>`;
   box.appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),260)},2200);
 }
+
+/* ---------- Modo "solo este móvil" ---------- */
+function setLocal(on){ui.local=on;localStorage.setItem('local',on?'1':'0');setSync(online?'ok':'off');render()}
+async function goLocal(){
+  const y=await dialog({icon:'board',title:'¿Marcador solo en este móvil?',text:'Llevas el partido sin conectarte al servidor, así no se gastan créditos. Los demás no verán los puntos hasta que lo subas. Mientras tanto, solo el marcador se guarda: no cambies plantilla ni equipos.',ok:'Usar solo este móvil',cancel:'Seguir en vivo'});
+  if(y){setLocal(true);toast('Marcador en modo solo este móvil','board')}}
+async function goLive(){
+  toast('Subiendo el marcador…','reset');
+  for(let i=0;i<3;i++){
+    try{const r=await fetch('/api/state?fresh='+Date.now(),{cache:'no-store'});const j=await r.json();
+      const base=j.state||initial();base.match=S.match;
+      const u=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({base:j.version,state:base})});
+      const k=await u.json();
+      if(u.ok){base.version=k.version;S=base;ver=k.version;ops=[];saveCache();setLocal(false);toast('Marcador subido: ya lo ven todos','check');return}
+    }catch(e){}
+  }
+  toast('No se pudo subir: revisa la conexión','wifiOff')}
 
 /* ---------- Vistas ---------- */
 const initialOf=n=>esc((n||'?').trim()[0]?.toUpperCase()||'?');
@@ -559,7 +584,9 @@ function vMarcador(){
   const tb=s.num===m.bestOf;
   let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${tb?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">a ${target()} puntos · al mejor de ${m.bestOf}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-a="fsOn" aria-label="Pantalla completa">${ic('expand')}<span class="hide-xs">Pantalla completa</span></button><button class="btn sm" data-a="resetMatch" aria-label="Nuevo partido">${ic('reset')}<span class="hide-xs">Nuevo</span></button></div></div>`;
   if(m.scores.length)h+=`<div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>`;
-  if(m.finished)h+=`<div class="banner ${m.finished}"><div class="ic">${ic('trophy')}</div><b>¡${esc(S.teams[m.finished].name)} gana el partido!</b><div class="sc">${m.setsWon[order[0]]} – ${m.setsWon[order[1]]} en sets</div><div class="row"><button class="btn sm" data-a="sub" data-t="${m.finished}">${ic('undo')}Deshacer punto</button><button class="btn pri sm" data-a="resetMatch">${ic('reset')}Revancha</button></div></div>`;
+  h+=ui.local?`<div class="localbar on">${ic('board')}<div><b>Solo este móvil</b><span>No gasta créditos. Súbelo para que lo vean todos.</span></div><button class="btn sm pri" data-a="goLive">Subir</button></div>`
+    :`<div class="localbar">${ic('wifiOff')}<div><b>¿Solo lo llevas tú?</b><span>Úsalo sin conexión y súbelo al final: ahorra créditos.</span></div><button class="btn sm" data-a="goLocal">Activar</button></div>`;
+  if(m.finished)h+=`<div class="banner ${m.finished}"><div class="ic">${ic('trophy')}</div><b>¡${esc(S.teams[m.finished].name)} gana el partido!</b><div class="sc">${m.setsWon[order[0]]} – ${m.setsWon[order[1]]} en sets</div><div class="row"><button class="btn sm" data-a="sub" data-t="${m.finished}">${ic('undo')}Deshacer punto</button>${ui.local?`<button class="btn pri sm" data-a="goLive">${ic('check')}Subir resultado</button>`:`<button class="btn pri sm" data-a="resetMatch">${ic('reset')}Revancha</button>`}</div></div>`;
   else if(s.winner)h+=`<div class="banner ${s.winner}"><div class="ic">${ic('flag')}</div><b>Set para ${esc(S.teams[s.winner].name)}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="sub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="nextSet">Siguiente set${ic('arrowR')}</button></div></div>`;
   if(!s.started)return h+vSetup(order);
   h+=`<div class="board">${side(order[0])}<div class="mid"><button class="swap" data-a="swap" aria-label="Cambiar de campo">${ic('swap')}</button><div class="setlbl">Cambio<br>de campo</div></div>${side(order[1])}</div>`;
@@ -617,7 +644,7 @@ function fsView(){
       <p class="mut">Salen con ${esc(S.teams.A.name)} en R${baseRot('A')} y ${esc(S.teams.B.name)} en R${baseRot('B')}.</p>
       <div class="row"><button class="btn" data-a="fsOff">${ic('shrink')}Ajustar</button><button class="btn pri" style="flex:1" data-a="startSet">${ic('whistle')}Pitar inicio</button></div></div></div>`;
   }else body=`${fsSide(order[0])}<div class="fsc"><button class="iconbtn" data-a="fsOff" aria-label="Salir de pantalla completa">${ic('shrink')}</button>
-      <div class="setn"><b>Set ${s.num}</b><span>a ${target()}${s.num===m.bestOf?'<br>desempate':''}</span></div>
+      ${ui.local?'<div class="fslocal">Solo este<br>móvil</div>':''}<div class="setn"><b>Set ${s.num}</b><span>a ${target()}${s.num===m.bestOf?'<br>desempate':''}</span></div>
       <div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>
       <button class="swap" data-a="swap" aria-label="Cambiar de campo">${ic('swap')}</button></div>${fsSide(order[1])}`;
   let ban='';
@@ -825,7 +852,7 @@ document.getElementById('nav').innerHTML=TABS.map(([k,i,l])=>`<button data-tab="
 document.getElementById('logo').innerHTML=ic('ball');
 applyTheme(curTheme());
 document.getElementById('themeBtn').addEventListener('click',()=>{const t=curTheme()==='light'?'dark':'light';applyTheme(t);toast(t==='light'?'Modo claro':'Modo oscuro',t==='light'?'sun':'moon')});
-document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ui.tab=b.dataset.tab;localStorage.setItem('tab',ui.tab);window.scrollTo(0,0);render()});
+document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ui.tab=b.dataset.tab;localStorage.setItem('tab',ui.tab);schedulePoll();window.scrollTo(0,0);render()});
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-a]');if(!el)return;const a=el.dataset.a,t=el.dataset.t,id=el.dataset.id;
   if(a==='ovClose'){if(e.target===el){ui.sheet=null;renderSheet()}return}
@@ -833,6 +860,8 @@ document.addEventListener('click',e=>{
     case 'add':if(tapGuard('add'+t))break;mutate(()=>addPoint(t));{const e=document.getElementById('pts'+t);if(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}}if(navigator.vibrate)navigator.vibrate(15);break;
     case 'sub':if(tapGuard('sub'+t))break;mutate(()=>subPoint(t));break;
     case 'editName':{e.preventDefault();const i=document.getElementById('tn'+t);if(i){i.focus();i.select()}break}
+    case 'goLocal':goLocal();break;
+    case 'goLive':goLive();break;
     case 'fsOn':fsEnter();break;
     case 'fsOff':fsExit();break;
     case 'swap':mutate(S=>{S.match.swapped=!S.match.swapped});toast('Cambio de campo','swap');break;
@@ -882,7 +911,10 @@ document.addEventListener('change',e=>{
 
 /* ---------- Arranque ---------- */
 try{const c=JSON.parse(localStorage.getItem('cache')||'null');if(c&&c.S){S=c.S;ver=c.ver;render()}}catch(e){}
-poll();setInterval(poll,2000);
+let pollT=null;
+const pollEvery=()=>ui.tab==='marcador'?5000:15000;
+function schedulePoll(){clearTimeout(pollT);pollT=setTimeout(async()=>{await poll();schedulePoll()},pollEvery())}
+poll();schedulePoll();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>

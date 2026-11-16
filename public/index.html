@@ -185,7 +185,7 @@ async function flush(){
     const j=await r.json();
     if(r.ok){ver=j.version;S.version=ver;ops.splice(0,sent);online=true;saveCache()}
     else if(r.status===409){ // otro móvil cambió algo: aplicamos encima solo los cambios que el servidor aún no tiene
-      online=true;S=j.state||initial();ver=j.version;for(const op of ops)applyOp(S,op);render()}
+      online=true;S=j.state||initial();ver=j.version;const done=S.applied||[];ops=ops.filter(op=>!done.includes(op.id));for(const op of ops)applyOp(S,op);saveCache();render()}
     else throw new Error(j.error||r.status);
   }catch(e){online=false}
   flushing=false;setSync(online?(ops.length?'busy':'ok'):'off');

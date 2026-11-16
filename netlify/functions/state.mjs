@@ -33,7 +33,8 @@ export default async (req) => {
     state.version = curVersion + 1;
     const opts = entry ? { onlyIfMatch: entry.etag } : { onlyIfNew: true };
     const res = await store.setJSON(KEY, state, opts);
-    if (!res.modified) {
+    // Algunas versiones devuelven undefined; solo es conflicto si dice explícitamente modified:false
+    if (res && res.modified === false) {
       const fresh = await store.get(KEY, { type: "json" });
       return json({ conflict: true, state: fresh, version: fresh?.version ?? 0 }, 409);
     }

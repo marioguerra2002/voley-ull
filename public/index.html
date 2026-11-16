@@ -501,7 +501,7 @@ function vEquipos(){
       <div class="cnt"><i></i>${T.members.length} jugador${T.members.length===1?'':'es'}</div></div>`};
   let h=`<div class="title"><div><h2>Equipos</h2><p>Elige capitanes y después asigna a cada jugador</p></div></div>
     <div class="card"><h2>Capitanes</h2><div class="teamhead">${tb('A',A)}${tb('B',B)}</div></div><div class="grid2">`;
-  const short=t=>esc(S.teams[t].name.replace(/^Equipo\s+/i,'').slice(0,8)||t);
+  const short=t=>esc((pname(S.teams[t].captain)||S.teams[t].name.replace(/^Equipo\s+/i,'')).slice(0,9)||t);
   const seen=new Set();
   for(const[k,label]of POS){
     const ps=S.players.filter(p=>p.pos.includes(k));if(!ps.length)continue;

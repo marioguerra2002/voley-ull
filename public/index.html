@@ -112,7 +112,7 @@ nav button.on{color:var(--acc);border-bottom-color:var(--acc)}
 .empty{color:var(--mut);text-align:center;padding:20px 8px}
 
 /* moneda */
-.coinov{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at 50% 45%,rgba(30,45,70,.92),rgba(3,8,14,.97));display:flex;flex-direction:column;align-items:center;justify-content:center;perspective:1200px;overflow:hidden;opacity:0;transition:opacity .25s}
+.coinov{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at 50% 50%,#101a2e,#000 75%);display:flex;flex-direction:column;align-items:center;justify-content:center;perspective:1200px;overflow:hidden;opacity:0;transition:opacity .25s}
 .coinov.show{opacity:1}
 .coinov .ttl{position:absolute;top:calc(var(--st) + 40px);left:0;right:0;text-align:center;font-weight:800;letter-spacing:4px;color:var(--acc);font-size:15px;text-transform:uppercase;opacity:.85}
 .coinwrap{position:relative;width:min(72vw,300px);height:min(72vw,300px)}
@@ -131,6 +131,22 @@ nav button.on{color:var(--acc);border-bottom-color:var(--acc)}
 .cres .big{font-size:clamp(24px,8vw,34px);font-weight:900;letter-spacing:.5px}
 .cres .sub{color:var(--mut);font-size:13px;margin-top:6px}
 .conf{position:absolute;top:45%;left:50%;width:10px;height:16px;border-radius:2px}
+
+/* intro "Cancha Infinita" */
+.dfloor{position:absolute;left:-60%;right:-60%;bottom:-10%;height:75%;transform-origin:50% 0;transform:perspective(500px) rotateX(72deg);opacity:0;
+  background:repeating-linear-gradient(90deg,rgba(255,195,0,.75) 0 2px,transparent 2px 38px),repeating-linear-gradient(0deg,rgba(255,195,0,.75) 0 2px,transparent 2px 38px);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 35%);mask-image:linear-gradient(to bottom,transparent,#000 35%)}
+.dsky{position:absolute;left:-60%;right:-60%;top:-10%;height:60%;transform-origin:50% 100%;transform:perspective(500px) rotateX(-72deg);opacity:0;
+  background:repeating-linear-gradient(90deg,rgba(61,139,255,.5) 0 2px,transparent 2px 38px),repeating-linear-gradient(0deg,rgba(255,90,95,.45) 0 2px,transparent 2px 38px);
+  -webkit-mask-image:linear-gradient(to top,transparent,#000 40%);mask-image:linear-gradient(to top,transparent,#000 40%)}
+.dnet{position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,transparent,#fff,transparent);opacity:0;box-shadow:0 0 18px #ffc300}
+.dring{position:absolute;top:50%;left:50%;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:3px solid #ffc300;box-shadow:0 0 30px #ffc300,inset 0 0 30px #ffc300;opacity:0}
+.dstreak{position:absolute;top:50%;left:50%;width:2px;height:90px;background:linear-gradient(transparent,#fff);transform-origin:50% 0;opacity:0}
+.dflash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.dtitle{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);text-align:center;pointer-events:none;opacity:0}
+.dtitle .k{font-size:12px;letter-spacing:8px;color:var(--mut);font-weight:700}
+.dtitle .t{font-size:clamp(34px,11vw,56px);font-weight:900;letter-spacing:2px;color:#fff;line-height:1.05;margin-top:6px;
+  text-shadow:-3px 0 #3d8bff,3px 0 #ff5a5f,0 0 30px rgba(255,195,0,.8)}
 </style>
 </head>
 <body>
@@ -383,13 +399,42 @@ function coinFlip(w){
   if(coinBusy)return;coinBusy=true;
   const A=S.teams.A.name,B=S.teams.B.name;
   const ov=document.createElement('div');ov.className='coinov';
-  ov.innerHTML=`<div class="ttl">Sorteo de saque</div>
+  ov.innerHTML=`<div class="dsky"></div><div class="dfloor"></div><div class="dnet"></div>
+    ${'<div class="dring"></div>'.repeat(3)}${'<div class="dstreak"></div>'.repeat(36)}
+    <div class="dtitle"><div class="k">SORTEO DE SAQUE</div><div class="t">CANCHA<br>INFINITA</div></div>
+    <div class="ttl" style="opacity:0">Sorteo de saque</div>
     <div class="coinwrap"><div class="crays"></div><div class="cglow"></div><div class="cshadow"></div>
       <div class="coin"><div class="face A"><div class="ini">${esc(initials(A))}</div><div class="nmc">${esc(A)}</div></div>
       <div class="face B"><div class="ini">${esc(initials(B))}</div><div class="nmc">${esc(B)}</div></div></div></div>
     <div class="cres"><div class="big" style="color:var(--${w})">¡Saca ${esc(S.teams[w].name)}!</div><div class="sub">Toca para continuar</div></div>`;
   document.body.appendChild(ov);requestAnimationFrame(()=>ov.classList.add('show'));
   const coin=ov.querySelector('.coin'),sh=ov.querySelector('.cshadow'),wrap=ov.querySelector('.coinwrap');
+  const I=2300; // duración de la intro
+  const q=sel=>ov.querySelector(sel),qa=sel=>ov.querySelectorAll(sel);
+  ov.insertAdjacentHTML('beforeend','<div class="dflash"></div>');
+  wrap.style.opacity=0;
+  // 1) línea de luz en el centro (la red) que se abre
+  q('.dnet').animate([{opacity:0,transform:'scaleX(0)'},{opacity:1,transform:'scaleX(1)',offset:.5},{opacity:1,transform:'scaleX(1) scaleY(1)'},{opacity:0,transform:'scaleX(1.2) scaleY(30)'}],{duration:900,easing:'ease-out',fill:'forwards'});
+  // 2) destello + ondas expansivas + temblor
+  setTimeout(()=>{
+    if(navigator.vibrate)navigator.vibrate([30,30,80]);
+    q('.dflash').animate([{opacity:.95},{opacity:0}],{duration:500,easing:'ease-out'});
+    qa('.dring').forEach((r,i)=>r.animate([{opacity:1,transform:'scale(0)'},{opacity:0,transform:'scale(9)'}],{duration:1100,delay:i*140,easing:'cubic-bezier(.1,.8,.3,1)',fill:'forwards'}));
+    qa('.dstreak').forEach((st,i)=>{const a=i*10+Math.random()*6;st.animate([{opacity:0,transform:`rotate(${a}deg) translateY(20px) scaleY(.2)`},{opacity:1,transform:`rotate(${a}deg) translateY(120px) scaleY(1.4)`,offset:.4},{opacity:0,transform:`rotate(${a}deg) translateY(520px) scaleY(2)`}],{duration:900+Math.random()*500,delay:Math.random()*300,easing:'ease-in',fill:'forwards'})});
+    ov.animate([{transform:'translate(0,0)'},{transform:'translate(-8px,5px)'},{transform:'translate(7px,-6px)'},{transform:'translate(-5px,-4px)'},{transform:'translate(4px,6px)'},{transform:'translate(0,0)'}],{duration:420});
+    // 3) la cancha infinita se despliega
+    q('.dfloor').animate([{opacity:0,transform:'perspective(500px) rotateX(72deg) scale(.2)',backgroundPosition:'0 0'},{opacity:1,transform:'perspective(500px) rotateX(72deg) scale(1)',backgroundPosition:'0 700px'}],{duration:1600,easing:'cubic-bezier(.2,.8,.3,1)',fill:'forwards'});
+    q('.dsky').animate([{opacity:0,transform:'perspective(500px) rotateX(-72deg) scale(.2)',backgroundPosition:'0 0'},{opacity:.8,transform:'perspective(500px) rotateX(-72deg) scale(1)',backgroundPosition:'0 -700px'}],{duration:1600,easing:'cubic-bezier(.2,.8,.3,1)',fill:'forwards'});
+    // 4) título
+    q('.dtitle').animate([{opacity:0,transform:'translateY(-50%) scale(2.4)',letterSpacing:'30px',filter:'blur(8px)'},{opacity:1,transform:'translateY(-50%) scale(1)',letterSpacing:'2px',filter:'blur(0)',offset:.25},{opacity:1,transform:'translateY(-50%) scale(1.05)',offset:.8},{opacity:0,transform:'translateY(-50%) scale(.6)',filter:'blur(6px)'}],{duration:1500,easing:'ease-out',fill:'forwards'});
+  },550);
+  // la cancha sigue fluyendo detrás de la moneda
+  setTimeout(()=>{
+    q('.dfloor').animate([{backgroundPosition:'0 700px'},{backgroundPosition:'0 1400px'}],{duration:4000,iterations:Infinity});
+    q('.dsky').animate([{backgroundPosition:'0 -700px'},{backgroundPosition:'0 -1400px'}],{duration:4000,iterations:Infinity});
+    q('.ttl').animate([{opacity:0},{opacity:.85}],{duration:400,fill:'forwards'});
+    wrap.style.opacity=1;
+  },I);
   const spins=8,end=spins*360+(w==='B'?180:0),D=2600;
   coin.animate([
     {transform:'translateY(40vh) rotateY(0deg) rotateX(10deg) scale(.25)'},
@@ -397,8 +442,8 @@ function coinFlip(w){
     {transform:`translateY(0) rotateY(${end*.97}deg) rotateX(8deg) scale(1)`,offset:.85},
     {transform:`translateY(-3vh) rotateY(${end*.995}deg) rotateX(0deg) scale(1.03)`,offset:.92},
     {transform:`translateY(0) rotateY(${end}deg) rotateX(0deg) scale(1)`}
-  ],{duration:D,easing:'cubic-bezier(.25,.6,.35,1)',fill:'forwards'});
-  sh.animate([{transform:'scale(.2)',opacity:.1},{transform:'scale(.35)',opacity:.15,offset:.45},{transform:'scale(1)',opacity:1,offset:.85},{transform:'scale(1)',opacity:1}],{duration:D,fill:'forwards'});
+  ],{duration:D,delay:I,easing:'cubic-bezier(.25,.6,.35,1)',fill:'both'});
+  sh.animate([{transform:'scale(.2)',opacity:.1},{transform:'scale(.35)',opacity:.15,offset:.45},{transform:'scale(1)',opacity:1,offset:.85},{transform:'scale(1)',opacity:1}],{duration:D,delay:I,fill:'both'});
   const t1=setTimeout(()=>{
     if(navigator.vibrate)navigator.vibrate([60,40,120]);
     wrap.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:450,easing:'ease-out'});
@@ -409,10 +454,10 @@ function coinFlip(w){
     for(let i=0;i<70;i++){const c=document.createElement('div');c.className='conf';c.style.background=cols[i%cols.length];ov.appendChild(c);
       const a=Math.random()*Math.PI*2,r=150+Math.random()*320,x=Math.cos(a)*r,y=Math.sin(a)*r-120;
       c.animate([{transform:'translate(-50%,-50%) rotate(0) scale(1)',opacity:1},{transform:`translate(${x}px,${y}px) rotate(${Math.random()*720}deg) scale(.9)`,opacity:1,offset:.6},{transform:`translate(${x}px,${y+300}px) rotate(${Math.random()*1080}deg) scale(.6)`,opacity:0}],{duration:1600+Math.random()*900,easing:'cubic-bezier(.1,.7,.3,1)',fill:'forwards'})}
-  },D);
+  },I+D);
   const close=()=>{clearTimeout(t1);clearTimeout(t2);ov.classList.remove('show');setTimeout(()=>{ov.remove();coinBusy=false},250)};
-  const t2=setTimeout(close,D+3200);
-  ov.addEventListener('click',()=>{if(ov.querySelector('.cres').getAnimations().length||Date.now()-start>D)close()});
+  const t2=setTimeout(close,I+D+3200);
+  ov.addEventListener('click',()=>{if(ov.querySelector('.cres').getAnimations().length||Date.now()-start>I+D)close()});
   const start=Date.now();
 }
 function maybeCoin(){const s=S&&S.match.set;if(!s)return;

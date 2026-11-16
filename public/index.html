@@ -110,6 +110,27 @@ nav button.on{color:var(--acc);border-bottom-color:var(--acc)}
 .grid6 button.on{background:var(--acc);color:#1a1300;border-color:var(--acc)}
 .lbl{font-size:12px;color:var(--mut);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
 .empty{color:var(--mut);text-align:center;padding:20px 8px}
+
+/* moneda */
+.coinov{position:fixed;inset:0;z-index:50;background:radial-gradient(circle at 50% 45%,rgba(30,45,70,.92),rgba(3,8,14,.97));display:flex;flex-direction:column;align-items:center;justify-content:center;perspective:1200px;overflow:hidden;opacity:0;transition:opacity .25s}
+.coinov.show{opacity:1}
+.coinov .ttl{position:absolute;top:calc(var(--st) + 40px);left:0;right:0;text-align:center;font-weight:800;letter-spacing:4px;color:var(--acc);font-size:15px;text-transform:uppercase;opacity:.85}
+.coinwrap{position:relative;width:min(72vw,300px);height:min(72vw,300px)}
+.coin{position:absolute;inset:0;transform-style:preserve-3d}
+.coin .face{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:10px solid #f5c542;box-shadow:inset 0 0 0 6px #b8860b,inset 0 0 40px rgba(0,0,0,.45),0 0 0 3px #7a5a00;color:#fff;text-align:center;padding:24px}
+.coin .face.A{background:radial-gradient(circle at 35% 30%,#7fb2ff,#3d8bff 45%,#1b4fae)}
+.coin .face.B{background:radial-gradient(circle at 35% 30%,#ff9fa2,#ff5a5f 45%,#b3262b);transform:rotateY(180deg)}
+.coin .face .ini{font-size:min(26vw,110px);font-weight:900;line-height:1;text-shadow:0 4px 0 rgba(0,0,0,.25)}
+.coin .face .nmc{font-size:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-top:6px;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.coin .face::after{content:"";position:absolute;inset:0;border-radius:50%;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.45) 48%,transparent 60%);mix-blend-mode:overlay}
+.cshadow{position:absolute;left:15%;right:15%;bottom:-40px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);filter:blur(8px)}
+.cglow{position:absolute;inset:-30%;border-radius:50%;opacity:0;background:radial-gradient(circle,rgba(255,195,0,.55),transparent 65%)}
+.crays{position:absolute;inset:-60%;opacity:0;background:repeating-conic-gradient(rgba(255,195,0,.18) 0 8deg,transparent 8deg 20deg);border-radius:50%}
+.cres{margin-top:70px;text-align:center;opacity:0;transform:scale(.6);padding:0 16px}
+.cres .big{font-size:clamp(24px,8vw,34px);font-weight:900;letter-spacing:.5px}
+.cres .sub{color:var(--mut);font-size:13px;margin-top:6px}
+.conf{position:absolute;top:45%;left:50%;width:10px;height:16px;border-radius:2px}
 </style>
 </head>
 <body>
@@ -351,7 +372,52 @@ function render(){
   const v={plantilla:vPlantilla,equipos:vEquipos,rotacion:vRotacion,marcador:vMarcador}[ui.tab]||vMarcador;
   document.getElementById('app').innerHTML=v();
   if(ui.sheet&&ui.sheet.k==='rot')renderSheet();
+  maybeCoin();
 }
+
+
+/* ---------- Moneda del sorteo ---------- */
+let lastDrawn=null,coinBusy=false;
+function initials(n){const w=n.replace(/^Equipo\s+/i,'').trim();return (w[0]||'?').toUpperCase()}
+function coinFlip(w){
+  if(coinBusy)return;coinBusy=true;
+  const A=S.teams.A.name,B=S.teams.B.name;
+  const ov=document.createElement('div');ov.className='coinov';
+  ov.innerHTML=`<div class="ttl">Sorteo de saque</div>
+    <div class="coinwrap"><div class="crays"></div><div class="cglow"></div><div class="cshadow"></div>
+      <div class="coin"><div class="face A"><div class="ini">${esc(initials(A))}</div><div class="nmc">${esc(A)}</div></div>
+      <div class="face B"><div class="ini">${esc(initials(B))}</div><div class="nmc">${esc(B)}</div></div></div></div>
+    <div class="cres"><div class="big" style="color:var(--${w})">¡Saca ${esc(S.teams[w].name)}!</div><div class="sub">Toca para continuar</div></div>`;
+  document.body.appendChild(ov);requestAnimationFrame(()=>ov.classList.add('show'));
+  const coin=ov.querySelector('.coin'),sh=ov.querySelector('.cshadow'),wrap=ov.querySelector('.coinwrap');
+  const spins=8,end=spins*360+(w==='B'?180:0),D=2600;
+  coin.animate([
+    {transform:'translateY(40vh) rotateY(0deg) rotateX(10deg) scale(.25)'},
+    {transform:`translateY(-28vh) rotateY(${end*.55}deg) rotateX(25deg) scale(1.15)`,offset:.45},
+    {transform:`translateY(0) rotateY(${end*.97}deg) rotateX(8deg) scale(1)`,offset:.85},
+    {transform:`translateY(-3vh) rotateY(${end*.995}deg) rotateX(0deg) scale(1.03)`,offset:.92},
+    {transform:`translateY(0) rotateY(${end}deg) rotateX(0deg) scale(1)`}
+  ],{duration:D,easing:'cubic-bezier(.25,.6,.35,1)',fill:'forwards'});
+  sh.animate([{transform:'scale(.2)',opacity:.1},{transform:'scale(.35)',opacity:.15,offset:.45},{transform:'scale(1)',opacity:1,offset:.85},{transform:'scale(1)',opacity:1}],{duration:D,fill:'forwards'});
+  const t1=setTimeout(()=>{
+    if(navigator.vibrate)navigator.vibrate([60,40,120]);
+    wrap.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:450,easing:'ease-out'});
+    ov.querySelector('.cglow').animate([{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{duration:500,fill:'forwards'});
+    ov.querySelector('.crays').animate([{opacity:0,transform:'rotate(0)'},{opacity:1,transform:'rotate(360deg)'}],{duration:12000,fill:'forwards'});
+    ov.querySelector('.cres').animate([{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1.08)',offset:.7},{opacity:1,transform:'scale(1)'}],{duration:500,fill:'forwards',easing:'ease-out'});
+    const cols=['#ffc300','#fff',w==='A'?'#3d8bff':'#ff5a5f','#ffe27a'];
+    for(let i=0;i<70;i++){const c=document.createElement('div');c.className='conf';c.style.background=cols[i%cols.length];ov.appendChild(c);
+      const a=Math.random()*Math.PI*2,r=150+Math.random()*320,x=Math.cos(a)*r,y=Math.sin(a)*r-120;
+      c.animate([{transform:'translate(-50%,-50%) rotate(0) scale(1)',opacity:1},{transform:`translate(${x}px,${y}px) rotate(${Math.random()*720}deg) scale(.9)`,opacity:1,offset:.6},{transform:`translate(${x}px,${y+300}px) rotate(${Math.random()*1080}deg) scale(.6)`,opacity:0}],{duration:1600+Math.random()*900,easing:'cubic-bezier(.1,.7,.3,1)',fill:'forwards'})}
+  },D);
+  const close=()=>{clearTimeout(t1);clearTimeout(t2);ov.classList.remove('show');setTimeout(()=>{ov.remove();coinBusy=false},250)};
+  const t2=setTimeout(close,D+3200);
+  ov.addEventListener('click',()=>{if(ov.querySelector('.cres').getAnimations().length||Date.now()-start>D)close()});
+  const start=Date.now();
+}
+function maybeCoin(){const s=S&&S.match.set;if(!s)return;
+  if(lastDrawn===null){lastDrawn=s.drawn||0;return}
+  if(s.drawn&&s.drawn!==lastDrawn){lastDrawn=s.drawn;if(!s.started)coinFlip(s.serving)}}
 
 /* ---------- Eventos ---------- */
 const lastTap={};function tapGuard(k){const n=Date.now();if(n-(lastTap[k]||0)<300)return true;lastTap[k]=n;return false}
@@ -366,7 +432,7 @@ document.addEventListener('click',e=>{
     case 'nextSet':mutate(()=>nextSet());break;
     case 'startSet':mutate(()=>{if(!S.match.set.started)startSet()});break;
     case 'serve':mutate(S=>{if(!S.match.set.started){S.match.set.serving=t;S.match.set.drawn=null}});break;
-    case 'drawServe':{const w=Math.random()<.5?'A':'B';mutate(S=>{const st=S.match.set;if(!st.started){st.serving=w;st.drawn=Date.now()}});if(navigator.vibrate)navigator.vibrate([20,40,20]);break}
+    case 'drawServe':{if(coinBusy)break;const w=Math.random()<.5?'A':'B',ts=Date.now();lastDrawn=ts;mutate(S=>{const st=S.match.set;if(!st.started){st.serving=w;st.drawn=ts}});coinFlip(w);break}
     case 'serveNow':mutate(S=>{S.match.set.serving=t});renderSheet();break;
     case 'bestOf':mutate(S=>{if(!S.match.scores.length)S.match.bestOf=+el.dataset.n});break;
     case 'resetMatch':if(confirm('¿Empezar un partido nuevo? Se borra el marcador actual.'))mutate(S=>{S.match=newMatch(S.match.bestOf)});break;

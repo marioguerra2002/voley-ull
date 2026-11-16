@@ -133,6 +133,7 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .tname .pen svg.i{width:16px;height:16px}
 .tbox .cnt{margin-top:10px}
 @media (max-width:520px){.teamhead{grid-template-columns:1fr}}
+.netbtn.on{background:var(--acc);color:var(--accTxt);border-color:transparent}
 .localbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px dashed var(--line2);border-radius:14px;padding:9px 10px 9px 12px;margin-bottom:12px}
 .localbar>svg.i{color:var(--mut)}
 .localbar div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
@@ -599,6 +600,7 @@ const ICONS={
   duo:'<circle cx="8.5" cy="8" r="3.2"/><circle cx="16" cy="9" r="2.8"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.5 14.3c.5-.2 1-.3 1.5-.3 2.6 0 4.6 1.6 5.2 4.5"/>',
   crown:'<path d="M3.5 8.5 7.5 12l4.5-6.5 4.5 6.5 4-3.5-1.5 10h-14l-1.5-10Z"/><path d="M5.5 21h13"/>',
   ladder:'<path d="M7 20V9M7 9 4 12M7 9l3 3"/><path d="M17 4v11M17 15l-3-3M17 15l3-3"/>',
+  wifi:'<path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 16a5 5 0 0 1 7 0"/><path d="M2 9a15 15 0 0 1 20 0"/><circle cx="12" cy="19.5" r=".9" fill="currentColor"/>',
   wifiOff:'<path d="M3 3l18 18"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.5a10 10 0 0 1 4.2-2.4M15.5 10.4A10 10 0 0 1 19 12.5"/><circle cx="12" cy="20" r=".8" fill="currentColor"/>'
 };
 const ic=(n,cls='')=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
@@ -626,14 +628,13 @@ function toast(text,icon='check'){
 
 /* ---------- Modo "solo este móvil" ---------- */
 function setLocal(on){ui.local=on;localStorage.setItem('local',on?'1':'0');setSync(online?'ok':'off');render()}
-async function goLocal(){
-  const y=await dialog({icon:'board',title:'¿Marcador solo en este móvil?',text:'Llevas el partido sin conectarte al servidor, así no se gastan créditos. Los demás no verán los puntos hasta que lo subas. Mientras tanto, solo el marcador se guarda: no cambies plantilla ni equipos.',ok:'Usar solo este móvil',cancel:'Seguir en vivo'});
-  if(y){setLocal(true);toast('Marcador en modo solo este móvil','board')}}
+function goLocal(){localStorage.setItem('localWhich',ui.mode);setLocal(true);toast('Solo este móvil: no gasta créditos. Vuelve a tocar para subirlo','wifiOff')}
+const netBtn=()=>`<button class="btn sm netbtn ${ui.local?'on':''}" data-a="${ui.local?'goLive':'goLocal'}" aria-label="${ui.local?'Volver a en vivo y subir marcador':'Usar solo en este móvil'}" title="${ui.local?'Solo este móvil · toca para subir':'En vivo · toca para usar solo este móvil'}">${ic(ui.local?'wifiOff':'wifi')}</button>`;
 async function goLive(){
   toast('Subiendo el marcador…','reset');
   for(let i=0;i<3;i++){
     try{const r=await fetch('/api/state?fresh='+Date.now(),{cache:'no-store'});const j=await r.json();
-      const base=j.state||initial();base.match=S.match;
+      const base=j.state||initial();base.match=S.match;if(S.beach)base.beach=S.beach;
       const u=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({base:j.version,state:base})});
       const k=await u.json();
       if(u.ok){base.version=k.version;S=base;ver=k.version;ops=[];saveCache();setLocal(false);toast('Marcador subido: ya lo ven todos','check');return}
@@ -726,10 +727,8 @@ function vRotacion(){
 function vMarcador(){
   const m=S.match,s=m.set,order=m.swapped?['B','A']:['A','B'];
   const tb=s.num===m.bestOf;
-  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${tb?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">a ${target()} puntos · al mejor de ${m.bestOf}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-a="fsOn" aria-label="Pantalla completa">${ic('expand')}<span class="hide-xs">Pantalla completa</span></button><button class="btn sm" data-a="resetMatch" aria-label="Nuevo partido">${ic('reset')}<span class="hide-xs">Nuevo</span></button></div></div>`;
+  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${tb?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">a ${target()} puntos · al mejor de ${m.bestOf}</div></div><div class="row" style="gap:6px">${netBtn()}<button class="btn sm" data-a="fsOn" aria-label="Pantalla completa">${ic('expand')}</button><button class="btn sm" data-a="resetMatch" aria-label="Nuevo partido">${ic('reset')}</button></div></div>`;
   if(m.scores.length)h+=`<div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>`;
-  h+=ui.local?`<div class="localbar on">${ic('board')}<div><b>Solo este móvil</b><span>No gasta créditos. Súbelo para que lo vean todos.</span></div><button class="btn sm pri" data-a="goLive">Subir</button></div>`
-    :`<div class="localbar">${ic('wifiOff')}<div><b>¿Solo lo llevas tú?</b><span>Úsalo sin conexión y súbelo al final: ahorra créditos.</span></div><button class="btn sm" data-a="goLocal">Activar</button></div>`;
   if(m.finished)h+=`<div class="banner ${m.finished}"><div class="ic">${ic('trophy')}</div><b>¡${esc(S.teams[m.finished].name)} gana el partido!</b><div class="sc">${m.setsWon[order[0]]} – ${m.setsWon[order[1]]} en sets</div><div class="row"><button class="btn sm" data-a="sub" data-t="${m.finished}">${ic('undo')}Deshacer punto</button>${ui.local?`<button class="btn pri sm" data-a="goLive">${ic('check')}Subir resultado</button>`:`<button class="btn pri sm" data-a="resetMatch">${ic('reset')}Revancha</button>`}</div></div>`;
   else if(s.winner)h+=`<div class="banner ${s.winner}"><div class="ic">${ic('flag')}</div><b>Set para ${esc(S.teams[s.winner].name)}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="sub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="nextSet">Siguiente set${ic('arrowR')}</button></div></div>`;
   if(!s.started)return h+vSetup(order);
@@ -768,7 +767,7 @@ function vSetup(order){
 /* ---------- Pantalla completa ---------- */
 let wl=null;
 async function wake(on){try{if(on&&'wakeLock' in navigator){if(!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}else if(!on&&wl){await wl.release();wl=null}}catch(e){}}
-function fsEnter(){ui.fs=true;ui.tab='marcador';render();wake(true);
+function fsEnter(){ui.fs=true;ui.tab=ui.mode==='playa'?'bmarcador':'marcador';render();wake(true);
   const d=document.documentElement;try{const r=d.requestFullscreen?d.requestFullscreen({navigationUI:'hide'}):d.webkitRequestFullscreen?.();
     Promise.resolve(r).then(()=>screen.orientation?.lock?.('landscape')).catch(()=>{})}catch(e){}
   toast(matchMedia('(orientation:portrait)').matches?'Gira el móvil para verlo de lado':'Modo partido activado','expand')}
@@ -780,6 +779,21 @@ function fsSide(t){const m=S.match,s=m.set,T=S.teams[t],n=need();
     <div class="srvb" style="justify-content:center">${s.serving===t?`<span>${ic('ball')}SACA</span>`:''}</div>
     <div class="pts" id="pts${t}">${s[t]}</div>
     <div class="bot">${t==='A'?'':`<button class="minus" data-a="sub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>`}<button class="plus" data-a="add" data-t="${t}">${ic('plus')}1</button>${t==='A'?`<button class="minus" data-a="sub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>`:''}</div></div>`}
+function bFsView(){const m=bm();if(!m)return '';const s=m.set,order=m.swapped?['B','A']:['A','B'],P={A:m.A,B:m.B};let body='';
+  if(!s.started){body=`<div class="fssetup"><div class="card"><h2 style="justify-content:center">Set ${s.num} · a ${bTarget()}</h2>
+      ${s.chosen?`<div class="drawres" style="--pc:${pairColor(P[s.serving])}">${ic('ball')}<div><span>Saca primero</span><b>${pairName(P[s.serving])}</b></div></div>`:`<button class="btn pri full" data-a="bDrawServe">${ic('dice')}Sortear saque</button>`}
+      <div class="row" style="margin-top:12px"><button class="btn" data-a="fsOff">${ic('shrink')}Ajustar orden</button><button class="btn pri" style="flex:1" data-a="bStart" ${s.chosen?'':'disabled'}>${ic('whistle')}Empezar</button></div></div></div>`}
+  else{const sv=server(),every=sideEvery(bTarget());const side=t=>{const id=P[t];return `<div class="fss" style="--c:${pairColor(id)}"><div class="top"><div class="nm">${pairName(id,' / ')}</div><div class="sets">${Array.from({length:bNeed()},(_,i)=>`<i class="${i<m.setsWon[t]?'w':''}"></i>`).join('')}</div></div>
+      <div class="srvb" style="justify-content:center">${s.serving===t?`<span>${ic('ball')}${esc(bname(sv))}</span>`:''}</div>
+      <div class="pts" id="bpts${t}">${s[t]}</div>
+      <div class="bot">${t===order[0]?'':`<button class="minus" data-a="bSub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>`}<button class="plus" data-a="bAdd" data-t="${t}">${ic('plus')}1</button>${t===order[0]?`<button class="minus" data-a="bSub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>`:''}</div></div>`};
+    body=`${side(order[0])}<div class="fsc"><button class="iconbtn" data-a="fsOff" aria-label="Salir de pantalla completa">${ic('shrink')}</button>
+      <div class="setn"><b>Set ${s.num}</b><span>a ${bTarget()}</span></div><div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>
+      <button class="swap ${every&&(s.A+s.B)>0&&(s.A+s.B)%every===0?'alert':''}" data-a="bSwapSides" aria-label="Cambio de campo">${ic('swap')}</button></div>${side(order[1])}`}
+  let ban='';
+  if(m.finished){const w=P[m.finished];ban=`<div class="fsbanner"><div class="banner pcol" style="--c:${pairColor(w)}"><div class="ic">${ic('trophy')}</div><b>¡Gana ${pairName(w)}!</b><div class="sc">${m.scores.map(x=>`${x[m.finished]}–${x[other(m.finished)]}`).join(' · ')}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${m.finished}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bEnd">${ic('flag')}Fin del partido</button></div></div></div>`}
+  else if(s.winner)ban=`<div class="fsbanner"><div class="banner pcol" style="--c:${pairColor(P[s.winner])}"><div class="ic">${ic('flag')}</div><b>Set para ${pairName(P[s.winner])}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bNextSet">Siguiente set${ic('arrowR')}</button></div></div></div>`;
+  return `<div class="fsw"><div class="fsb" style="position:relative">${body}${ban}</div></div>`}
 function fsView(){
   const m=S.match,s=m.set,order=m.swapped?['B','A']:['A','B'];let body='';
   if(!s.started){
@@ -981,7 +995,7 @@ const server=()=>{const s=bm().set;return s.order[s.serving][s.idx[s.serving]]};
 function vBMarcador(){const m=bm();
   if(!m)return `<div class="title"><div><h2>Marcador</h2><p>Arena de playa</p></div></div><div class="card empty">${ic('board')}<b>No hay partido en juego</b>Empieza uno desde la pestaña Juego.<br><br><button class="btn pri" data-a="goTab" data-k="juego">${ic('trophy')}Ir a Juego</button></div>`;
   const s=m.set,order=m.swapped?['B','A']:['A','B'],P={A:m.A,B:m.B};
-  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${m.cfg.sets>1&&s.num===m.cfg.sets?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">${refLabel(m.ref)} · a ${bTarget()}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-a="bAbandon" aria-label="Cancelar partido">${ic('x')}</button><button class="btn sm pri" data-a="bEnd">${ic('flag')}Fin del partido</button></div></div>`;
+  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${m.cfg.sets>1&&s.num===m.cfg.sets?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">${refLabel(m.ref)} · a ${bTarget()}</div></div><div class="row" style="gap:6px">${netBtn()}<button class="btn sm" data-a="fsOn" aria-label="Pantalla completa">${ic('expand')}</button><button class="btn sm" data-a="bReset" aria-label="Reiniciar partido">${ic('reset')}</button><button class="btn sm" data-a="bAbandon" aria-label="Cancelar partido">${ic('x')}</button></div></div>`;
   if(m.scores.length)h+=`<div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>`;
   if(m.finished){const w=P[m.finished];h+=`<div class="banner pcol" style="--c:${pairColor(w)}"><div class="ic">${ic('trophy')}</div><b>¡Gana ${pairName(w)}!</b><div class="sc">${m.scores.map(x=>`${x[m.finished]}–${x[other(m.finished)]}`).join(' · ')}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${m.finished}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bEnd">${ic('flag')}Fin del partido · guardar</button></div></div>`}
   else if(s.winner)h+=`<div class="banner pcol" style="--c:${pairColor(P[s.winner])}"><div class="ic">${ic('flag')}</div><b>Set para ${pairName(P[s.winner])}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="bSub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="bNextSet">Siguiente set${ic('arrowR')}</button></div></div>`;
@@ -1006,7 +1020,7 @@ function vBMarcador(){const m=bm();
     <button class="minus" data-a="bSub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>
     ${s.serving===t?'':`<div class="mut" style="font-size:12px">Luego saca ${esc(bname(s.order[t][s.served[t]?s.idx[t]^1:s.idx[t]]))}</div>`}</div>`};
   h+=`<div class="board">${side(order[0])}<div class="mid"><button class="swap ${every&&(s.A+s.B)>0&&(s.A+s.B)%every===0?'alert':''}" data-a="bSwapSides" aria-label="Cambio de campo">${ic('swap')}</button><div class="setlbl">${every?`Cambio<br>cada ${every}`:'Cambio<br>de campo'}</div></div>${side(order[1])}</div>`;
-  h+=`<button class="btn sm ghost" data-a="bEditOrder" style="display:flex;margin:14px auto 0">${ic('edit')}Corregir quién saca</button>`;
+  h+=`<div class="row" style="margin-top:14px;max-width:980px;margin-left:auto;margin-right:auto"><button class="btn" data-a="bEditOrder">${ic('edit')}Corregir saque</button><button class="btn pri" style="flex:1" data-a="bEnd">${ic('flag')}Fin del partido</button></div>`;
   return h}
 
 /* ---------- Hojas ---------- */
@@ -1048,7 +1062,7 @@ function render(){
   const v=V[ui.tab]||Object.values(V)[ui.mode==='playa'?1:3];
   const app=document.getElementById('app');app.innerHTML=v();
   if(ui.lastTab!==ui.tab){app.classList.remove('view');void app.offsetWidth;app.classList.add('view');ui.lastTab=ui.tab}
-  document.getElementById('fs').innerHTML=ui.fs&&ui.mode==='pista'?fsView():'';document.body.classList.toggle('fs-on',!!ui.fs);
+  document.getElementById('fs').innerHTML=ui.fs?(ui.mode==='pista'?fsView():bFsView()):'';document.body.classList.toggle('fs-on',!!ui.fs);
   if(ui.sheet&&ui.sheet.k==='rot')renderSheet();
   maybeCoin();maybeBCoin();maybeLap();
   if(ui.mode==='playa'&&!(S.beach&&S.beach.players)&&!ui.migr){ui.migr=true;setTimeout(()=>mutate(()=>{eb()}),0)}
@@ -1272,8 +1286,9 @@ document.addEventListener('click',e=>{
     case 'bSwapSides':mutate(()=>{const m=eb().match;if(m)m.swapped=!m.swapped});break;
     case 'bEditOrder':ui.sheet={k:'bsrv'};renderSheet();break;
     case 'bSetServer':{const k=+el.dataset.k;mutate(()=>{const s=eb().match.set;s.serving=t;s.idx[t]=k;s.served[t]=true});renderSheet();break}
+    case 'bReset':dialog({icon:'reset',title:'¿Reiniciar el partido?',text:'El marcador vuelve a 0–0 y se borran los sets jugados. Las parejas siguen siendo las mismas.',ok:'Reiniciar',cancel:'Seguir'}).then(y=>{if(y){mutate(()=>{const M=eb().match;if(!M)return;const q=M.ref.type==='king';M.setsWon={A:0,B:0};M.scores=[];M.finished=null;M.swapped=false;M.set=newBSet(1,M.set.firstServe||'A',M.set.order,q,q)});toast('Partido reiniciado','reset')}});break;
     case 'bAbandon':dialog({icon:'x',tone:'danger',title:'¿Cancelar el partido?',text:'Se borra este marcador sin guardar resultado.',ok:'Cancelar partido',cancel:'Seguir jugando'}).then(y=>{if(y){mutate(()=>{eb().match=null});toast('Partido cancelado','x')}});break;
-    case 'bEnd':{const m=bm();if(!m)break;const s=m.set;let ws=m.finished;
+    case 'bEnd':{const m=bm();if(!m)break;if(ui.fs){ui.fs=false;wake(false)}const s=m.set;let ws=m.finished;
       if(!ws){if(m.setsWon.A!==m.setsWon.B)ws=m.setsWon.A>m.setsWon.B?'A':'B';else if(s.A!==s.B)ws=s.A>s.B?'A':'B'}
       if(!ws){toast('Van empatados: alguien tiene que ir por delante','warn');break}
       const os=other(ws),parts=m.scores.map(x=>`${x[ws]}–${x[os]}`);if(!m.finished&&!s.winner&&(s.A+s.B)>0)parts.push(`${s[ws]}–${s[os]}`);

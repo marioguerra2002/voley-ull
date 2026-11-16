@@ -308,7 +308,9 @@ function vSetup(order){
   const m=S.match,s=m.set;const locked=m.scores.length>0;
   let h=`<div class="card"><h2>Antes de empezar</h2>`;
   if(!locked)h+=`<div class="lbl" style="margin-top:0">Partido al mejor de</div><div class="seg"><button style="flex:1" class="${m.bestOf===3?'on':''}" data-a="bestOf" data-n="3">3 sets (3º a 15)</button><button style="flex:1" class="${m.bestOf===5?'on':''}" data-a="bestOf" data-n="5">5 sets (5º a 15)</button></div>`;
-  h+=`<div class="lbl">Saca primero</div><div class="seg">${order.map(t=>`<button style="flex:1" class="${s.serving===t?'on '+t:''}" data-a="serve" data-t="${t}">${esc(S.teams[t].name)}</button>`).join('')}</div></div>`;
+  h+=`<div class="lbl">Saca primero</div><div class="seg">${order.map(t=>`<button style="flex:1" class="${s.serving===t?'on '+t:''}" data-a="serve" data-t="${t}">${esc(S.teams[t].name)}</button>`).join('')}</div>
+  <button class="btn full" data-a="drawServe" style="margin-top:10px">🎲 Sortear quién saca</button>
+  ${s.drawn?`<p class="mut" style="text-align:center;margin:8px 0 0">Sorteo: saca <b style="color:var(--${s.serving})">${esc(S.teams[s.serving].name)}</b></p>`:''}</div>`;
   for(const t of order){const T=S.teams[t];
     h+=`<div class="card" style="border-top:4px solid var(--${t})"><h2>${esc(T.name)}<span class="rbig" style="font-size:24px">R${baseRot(t)}</span></h2>
     ${T.court.some(Boolean)?courtView(T.court,T.setter,{mini:true,serving:s.serving===t}):`<p class="mut" style="margin:0 0 6px">Sin alineación (puedes ponerla en Rotación). Elige al menos la R inicial:</p>`}
@@ -363,7 +365,8 @@ document.addEventListener('click',e=>{
     case 'swap':mutate(S=>{S.match.swapped=!S.match.swapped});break;
     case 'nextSet':mutate(()=>nextSet());break;
     case 'startSet':mutate(()=>{if(!S.match.set.started)startSet()});break;
-    case 'serve':mutate(S=>{if(!S.match.set.started)S.match.set.serving=t});break;
+    case 'serve':mutate(S=>{if(!S.match.set.started){S.match.set.serving=t;S.match.set.drawn=null}});break;
+    case 'drawServe':{const w=Math.random()<.5?'A':'B';mutate(S=>{const st=S.match.set;if(!st.started){st.serving=w;st.drawn=Date.now()}});if(navigator.vibrate)navigator.vibrate([20,40,20]);break}
     case 'serveNow':mutate(S=>{S.match.set.serving=t});renderSheet();break;
     case 'bestOf':mutate(S=>{if(!S.match.scores.length)S.match.bestOf=+el.dataset.n});break;
     case 'resetMatch':if(confirm('¿Empezar un partido nuevo? Se borra el marcador actual.'))mutate(S=>{S.match=newMatch(S.match.bestOf)});break;

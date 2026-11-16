@@ -8,7 +8,8 @@ const json = (body, status = 200) =>
   });
 
 export default async (req) => {
-  const store = getStore({ name: "voley", consistency: "strong" });
+  // Región fija: los datos se guardaron en us-east-2 desde el principio
+  const store = getStore({ name: "voley", consistency: "strong", region: "us-east-2" });
 
   if (req.method === "GET") {
     const url = new URL(req.url);

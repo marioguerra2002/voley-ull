@@ -878,7 +878,8 @@ const pairOpts=(sel,ex)=>BB().pairs.filter(p=>p.id!==ex).map(p=>`<option value="
 function vBSingle(){const g=BB().game,s=g.single;
   let h=`<div class="card"><h2>Partido único</h2><div class="vsrow">${['A','B'].map((t,k)=>`${k?'<span class="vsb">VS</span>':''}<button class="pickbtn ${s[t]?'set':''}" style="--pc:${s[t]?pairColor(s[t]):'var(--line2)'}" data-a="bPickPairSheet" data-t="${t}">${s[t]?`<i>${pairNum(s[t])}</i><span>${esc(bname(pairOf(s[t])?.a))}<br>${esc(bname(pairOf(s[t])?.b))}</span>`:`${ic('duo')}<span>Elegir<br>pareja</span>`}</button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="btn" data-a="bSingleRand">${ic('dice')}Al azar</button><button class="btn pri" style="flex:1" data-a="bPlaySingle" ${s.A&&s.B?'':'disabled'}>${ic('whistle')}Ir al marcador</button></div></div>`;
-  if(g.history.length)h+=`<div class="card"><h2>Últimos resultados</h2>${g.history.slice(-5).reverse().map(r=>`<div class="resrow">${pairChip(r.w)}<span class="mut">ganó a</span>${pairChip(r.l)}<b>${r.score||''}</b></div>`).join('')}</div>`;
+  const hist=g.history.filter(r=>pairOf(r.w)&&pairOf(r.l));
+  if(hist.length)h+=`<div class="card"><h2>Últimos resultados</h2>${hist.slice(-5).reverse().map(r=>`<div class="resrow">${pairChip(r.w)}<span class="mut">ganó a</span>${pairChip(r.l)}<b>${r.score||''}</b></div>`).join('')}</div>`;
   return h}
 function roundName(n,r){return n===1?'Final':n===2?'Semifinales':n===4?'Cuartos':n===8?'Octavos':'Ronda '+(r+1)}
 function vBTour(){const T=BB().game.tour;
@@ -950,7 +951,7 @@ function ladderNextRound(){const g=BB().game,L=g.ladder,ids=BB().pairs.map(p=>p.
   const m=[];for(let i=0;i+1<list.length;i+=2)m.push({A:list[i],B:list[i+1],w:null});
   return{m,rest:list.length%2?[list[list.length-1]]:[]}}
 function applyResult(ref,w,score){const g=eb().game;
-  if(ref.type==='single'){const s=g.single;const l=w===s.A?s.B:s.A;g.history.push({w,l,score});if(g.history.length>30)g.history.shift()}
+  if(ref.type==='single'){const s=g.single;const l=w===s.A?s.B:s.A;g.history=g.history.filter(r=>pairOf(r.w)&&pairOf(r.l));g.history.push({w,l,score});if(g.history.length>30)g.history.shift()}
   else if(ref.type==='tour'&&g.tour){const m=g.tour.rounds[ref.r]?.[ref.i];if(m&&!m.w){m.w=w;m.score=score;tourAdvance(g.tour)}}
   else if(ref.type==='king'&&g.king){if(w===g.king.king||w===g.king.queue[0])kingResult(g.king,w,score)}
   else if(ref.type==='ladder'&&g.ladder){const R=g.ladder.rounds[g.ladder.rounds.length-1],m=R.m[ref.i];if(m&&!m.w){m.w=w;m.score=score;const l=w===m.A?m.B:m.A;const L=g.ladder;L.wins[w]=(L.wins[w]||0)+1;L.played[w]=(L.played[w]||0)+1;L.played[l]=(L.played[l]||0)+1}}}
@@ -1260,8 +1261,8 @@ document.addEventListener('click',e=>{
     case 'bRandPairs':{const f=shuffle(freePlayers().map(p=>p.id)),np=[];for(let i=0;i+1<f.length;i+=2)np.push({id:uid(),a:f[i],b:f[i+1]});
       ui.pick=null;mutate(()=>{const B=eb();for(const p of np)if(!pairOfPlayer(p.a)&&!pairOfPlayer(p.b))B.pairs.push(p)});toast(`${np.length} pareja${np.length===1?'':'s'} sorteada${np.length===1?'':'s'}${f.length%2?' · uno queda libre':''}`,'dice');break}
     case 'bUnpair':{if(gameActive()&&pairInGame(id)){toast('Esta pareja está jugando: reinicia el juego antes','warn');break}
-      mutate(()=>{const B=eb();B.pairs=B.pairs.filter(p=>p.id!==id)});toast('Pareja separada','x');break}
-    case 'bClearPairs':dialog({icon:'duo',tone:'danger',title:'¿Deshacer las parejas?',text:'Todos quedan sin pareja y se reinician el torneo, el rey de la pista y las rondas.',ok:'Deshacer todas',cancel:'Mejor no'}).then(y=>{if(y){mutate(()=>{const B=eb();B.pairs=[];const g=B.game;g.tour=g.king=g.ladder=null;g.single={A:null,B:null};B.match=null});toast('Parejas deshechas','duo')}});break;
+      mutate(()=>{const B=eb();B.pairs=B.pairs.filter(p=>p.id!==id);B.game.history=B.game.history.filter(r=>r.w!==id&&r.l!==id)});toast('Pareja separada','x');break}
+    case 'bClearPairs':dialog({icon:'duo',tone:'danger',title:'¿Deshacer las parejas?',text:'Todos quedan sin pareja y se reinician el torneo, el rey de la pista y las rondas.',ok:'Deshacer todas',cancel:'Mejor no'}).then(y=>{if(y){mutate(()=>{const B=eb();B.pairs=[];const g=B.game;g.tour=g.king=g.ladder=null;g.single={A:null,B:null};g.history=[];B.match=null});toast('Parejas deshechas','duo')}});break;
     case 'bGame':{const k=el.dataset.k,g=BB().game;if(k===g.type)break;
       if(gameActive()){const cur=g.type;dialog({icon:'warn',title:`Hay un ${GNAME[cur]} abierto`,text:`Para no tener varios juegos a la vez, cierra el ${GNAME[cur]} antes de empezar ${k==='tour'?'un torneo':k==='single'?'un partido':k==='king'?'rey de la pista':'ganadores vs ganadores'}. Se pierden sus cruces y victorias.`,ok:`Cerrar ${GNAME[cur]}`,cancel:'Seguir con él'}).then(y=>{if(y){mutate(()=>{const G=eb().game;if(cur!=='single')G[cur]=null;if(eb().match&&eb().match.ref.type===cur)eb().match=null;G.type=k});toast(`Cerrado. Ahora: ${GNAME[k]}`,'check')}});break}
       mutate(()=>{eb().game.type=k});break}

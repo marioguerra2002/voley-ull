@@ -169,20 +169,23 @@ function placeZone(arr,z,id){const j=id?arr.indexOf(id):-1;if(j>=0&&j!==z)arr[j]
 function removeFromTeam(t,id){const T=S.teams[t];T.members=T.members.filter(x=>x!==id);T.court=T.court.map(x=>x===id?null:x);if(T.libero===id)T.libero=null;if(T.setter===id)T.setter=null}
 
 /* ---------- Sincronización ---------- */
-let S=null,ver=0,ops=[],flushing=false,online=true,dirtyRender=false;
+let S=null,ver=0,ops=[],flushing=false,online=true,dirtyRender=false,seq=0;
 const ui={tab:localStorage.getItem('tab')||'marcador',rotTeam:'A',sheet:null};
 function setSync(state){const d=document.getElementById('dot'),t=document.getElementById('syncTxt');
   d.className='dot'+(state==='off'?' off':state==='busy'?' busy':'');t.textContent=state==='off'?'Sin conexión':state==='busy'?'Guardando…':'En vivo'}
-function mutate(fn){if(!S)return;fn(S);ops.push(fn);try{localStorage.setItem('cache',JSON.stringify({S,ver}))}catch(e){}render();flush()}
+// Cada cambio lleva un id; el estado guarda los últimos ids aplicados para no aplicarlo dos veces
+function applyOp(st,op){st.applied=st.applied||[];if(st.applied.includes(op.id))return;op.fn(st);st.applied.push(op.id);if(st.applied.length>200)st.applied.splice(0,st.applied.length-200)}
+function saveCache(){try{localStorage.setItem('cache',JSON.stringify({S,ver}))}catch(e){}}
+function mutate(fn){if(!S)return;seq++;const op={id:uid()+uid(),fn};applyOp(S,op);ops.push(op);saveCache();render();flush()}
 async function flush(){
   if(flushing||!ops.length)return;flushing=true;setSync('busy');
   const sent=ops.length;
   try{
     const r=await fetch('/api/state',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({base:ver,state:S})});
     const j=await r.json();
-    if(r.ok){ver=j.version;S.version=ver;ops.splice(0,sent);online=true}
-    else if(r.status===409){ // otro móvil cambió algo: aplicamos nuestros cambios encima
-      S=j.state||initial();ver=j.version;for(const f of ops){try{f(S)}catch(e){}}render()}
+    if(r.ok){ver=j.version;S.version=ver;ops.splice(0,sent);online=true;saveCache()}
+    else if(r.status===409){ // otro móvil cambió algo: aplicamos encima solo los cambios que el servidor aún no tiene
+      online=true;S=j.state||initial();ver=j.version;for(const op of ops)applyOp(S,op);render()}
     else throw new Error(j.error||r.status);
   }catch(e){online=false}
   flushing=false;setSync(online?(ops.length?'busy':'ok'):'off');
@@ -191,10 +194,13 @@ async function flush(){
 async function poll(){
   if(flushing)return;
   if(ops.length){flush();return}
+  const mySeq=seq;
   try{
     const r=await fetch('/api/state?v='+ver,{cache:'no-store'});const j=await r.json();online=true;
-    if(j.state===null){S=initial();ops.push(()=>{});ver=0;render();flush();return}
-    if(!j.same&&j.version!==ver&&!ops.length){S=j.state;ver=j.version;localStorage.setItem('cache',JSON.stringify({S,ver}));safeRender()}
+    // Si mientras esperábamos hubo un cambio local o un guardado, esta respuesta puede ser vieja: se ignora
+    if(mySeq!==seq||flushing||ops.length)return;
+    if(j.state===null){S=initial();mutate(()=>{});return}
+    if(!j.same&&j.state&&j.version>ver){S=j.state;ver=j.version;saveCache();safeRender()}
     setSync('ok');
   }catch(e){online=false;setSync('off')}
 }
@@ -345,13 +351,14 @@ function render(){
 }
 
 /* ---------- Eventos ---------- */
+const lastTap={};function tapGuard(k){const n=Date.now();if(n-(lastTap[k]||0)<300)return true;lastTap[k]=n;return false}
 document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ui.tab=b.dataset.tab;localStorage.setItem('tab',ui.tab);window.scrollTo(0,0);render()});
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-a]');if(!el)return;const a=el.dataset.a,t=el.dataset.t,id=el.dataset.id;
   if(a==='ovClose'){if(e.target===el){ui.sheet=null;renderSheet()}return}
   switch(a){
-    case 'add':mutate(()=>addPoint(t));if(navigator.vibrate)navigator.vibrate(15);break;
-    case 'sub':mutate(()=>subPoint(t));break;
+    case 'add':if(tapGuard('add'+t))break;mutate(()=>addPoint(t));if(navigator.vibrate)navigator.vibrate(15);break;
+    case 'sub':if(tapGuard('sub'+t))break;mutate(()=>subPoint(t));break;
     case 'swap':mutate(S=>{S.match.swapped=!S.match.swapped});break;
     case 'nextSet':mutate(()=>nextSet());break;
     case 'startSet':mutate(()=>{if(!S.match.set.started)startSet()});break;

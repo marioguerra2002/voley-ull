@@ -23,16 +23,17 @@ html,body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.35 -apple-s
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 input,select{font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%}
 select{appearance:none;-webkit-appearance:none;text-overflow:ellipsis}
-header{position:sticky;top:0;z-index:5;background:rgba(11,22,34,.94);backdrop-filter:blur(8px);padding:calc(var(--st) + 10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+header{position:sticky;top:0;z-index:5;background:rgba(11,22,34,.96);backdrop-filter:blur(8px);padding:calc(var(--st) + 8px) 12px 0;border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;justify-content:space-between;padding:0 4px 6px}
 header h1{margin:0;font-size:20px;letter-spacing:.2px}
 .sync{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .dot.off{background:var(--B)}.dot.busy{background:var(--acc)}
-main{padding:14px 14px calc(90px + var(--sb))}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(4,1fr);background:#0e1c2c;border-top:1px solid var(--line);padding-bottom:var(--sb)}
-nav button{padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--mut)}
-nav button .ic{font-size:21px;line-height:1}
-nav button.on{color:var(--acc)}
+main{padding:14px 14px calc(80px + var(--sb))}
+nav{display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{padding:6px 0 7px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11px;color:var(--mut);border-bottom:3px solid transparent}
+nav button .ic{font-size:19px;line-height:1}
+nav button.on{color:var(--acc);border-bottom-color:var(--acc)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
 .card h2{margin:0 0 10px;font-size:15px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.6px;display:flex;justify-content:space-between;align-items:center}
 .row{display:flex;align-items:center;gap:10px}
@@ -112,14 +113,14 @@ nav button.on{color:var(--acc)}
 </style>
 </head>
 <body>
-<header><h1 id="ttl">Vóley</h1><div class="sync"><span id="syncTxt">Conectando…</span><span class="dot busy" id="dot"></span></div></header>
-<main id="app"></main>
-<nav id="nav">
+<header><div class="hrow"><h1 id="ttl">Vóley</h1><div class="sync"><span id="syncTxt">Conectando…</span><span class="dot busy" id="dot"></span></div></div><nav id="nav">
   <button data-tab="plantilla"><span class="ic">👥</span>Plantilla</button>
   <button data-tab="equipos"><span class="ic">🤝</span>Equipos</button>
   <button data-tab="rotacion"><span class="ic">🔄</span>Rotación</button>
   <button data-tab="marcador"><span class="ic">🏐</span>Marcador</button>
-</nav>
+</nav></header>
+<main id="app"></main>
+
 <div id="sheet"></div>
 
 <script>
@@ -225,8 +226,8 @@ function teamOf(id){return S.teams.A.members.includes(id)?'A':S.teams.B.members.
 function vEquipos(){
   const A=S.teams.A,B=S.teams.B;
   let h=`<div class="card"><div class="row">
-    <div style="flex:1"><input class="teamname A" data-a="teamName" data-t="A" value="${esc(A.name)}"><div class="cnt">${A.members.length} jugadores</div></div>
-    <div style="flex:1"><input class="teamname B" data-a="teamName" data-t="B" value="${esc(B.name)}"><div class="cnt">${B.members.length} jugadores</div></div>
+    <div style="flex:1"><input class="teamname A" data-a="teamName" data-t="A" value="${esc(A.name)}"><div class="cnt">${A.members.length} jugador${A.members.length===1?"":"es"}</div></div>
+    <div style="flex:1"><input class="teamname B" data-a="teamName" data-t="B" value="${esc(B.name)}"><div class="cnt">${B.members.length} jugador${B.members.length===1?"":"es"}</div></div>
   </div></div>`;
   const short=t=>esc(S.teams[t].name.replace(/^Equipo\s+/i,'').slice(0,8)||t);
   const seen=new Set();

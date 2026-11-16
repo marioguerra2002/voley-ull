@@ -83,6 +83,7 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .btn.danger{color:var(--B)}
 .btn.big{padding:16px;font:800 20px/1 var(--fd);letter-spacing:.6px;text-transform:uppercase}
 .mut{color:var(--mut);font-size:13px}
+@media (max-width:420px){.hide-xs{display:none}}
 .tag{font-size:11px;font-weight:700;color:var(--mut);background:var(--surface2);border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:1px}
 .tag.cap{background:var(--acc);color:var(--accTxt)}
 .pl{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
@@ -225,6 +226,37 @@ main{padding:16px 14px calc(90px + var(--sb))}
   .mid{padding-top:80px}
   .sbhead .mut,.hist{display:none}
 }
+
+/* pantalla completa del marcador */
+body.fs-on{overflow:hidden}
+body.fs-on main,body.fs-on header{display:none}
+#fs:empty{display:none}
+.fsw{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;padding:max(10px,var(--st)) max(12px,env(safe-area-inset-right)) max(10px,var(--sb)) max(12px,env(safe-area-inset-left))}
+@media (orientation:portrait){.fsw{inset:auto;top:50%;left:50%;width:100dvh;height:100dvw;transform:translate(-50%,-50%) rotate(90deg);padding:12px max(12px,var(--st)) 12px max(12px,var(--sb))}}
+.fsb{flex:1;display:grid;grid-template-columns:1fr auto 1fr;gap:12px;min-height:0}
+.fss{position:relative;overflow:hidden;border-radius:26px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;padding:12px 14px;min-width:0}
+.fss::before{content:"";position:absolute;inset:0;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 30%,transparent),transparent 60%);pointer-events:none}
+.fss.A{--c:var(--A)}.fss.B{--c:var(--B)}
+.fss>*{position:relative}
+.fss .top{display:flex;align-items:center;gap:10px;min-width:0}
+.fss .top .nm{flex:1;min-width:0;font:800 clamp(18px,4.2vh,30px)/1 var(--fd);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fss .pts{flex:1;display:grid;place-items:center;font-size:clamp(90px,46vh,360px);line-height:.85;min-height:0}
+@media (orientation:portrait){.fss .pts{font-size:clamp(90px,46vw,360px)}}
+.fss .bot{display:flex;align-items:center;gap:10px}
+.fss .plus{flex:1;height:clamp(54px,13vh,84px);width:auto;font-size:clamp(30px,6vh,44px)}
+.fss .minus{width:clamp(54px,13vh,84px);height:clamp(54px,13vh,84px);border-radius:16px}
+.fss .rline{gap:6px;width:auto!important;flex:none}
+.fss .rline .r{font-size:clamp(22px,5vh,34px)}
+.fsc{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px;width:clamp(70px,13vw,110px)}
+.fsc .setn{text-align:center}
+.fsc .setn b{display:block;font:800 clamp(22px,5vh,34px)/1 var(--fd);text-transform:uppercase}
+.fsc .setn span{font:700 11px/1.3 var(--fb);color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+.fsc .hist{flex-direction:column;align-items:center;margin:0;gap:4px}
+.fsc .swap{width:56px;height:56px}
+.fsbanner{position:absolute;inset:0;z-index:2;display:grid;place-items:center;background:rgba(3,6,12,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);border-radius:inherit}
+.fsbanner .banner{min-width:min(420px,70%);margin:0}
+.fssetup{grid-column:1/-1;display:grid;place-items:center}
+.fssetup .card{width:min(520px,100%);margin:0;text-align:center}
 /* enfrentamiento */
 .fov .fz{position:absolute;left:0;top:0;will-change:transform}
 .fov .fz svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 6px var(--c)) drop-shadow(0 0 18px var(--c))}
@@ -287,6 +319,7 @@ main{padding:16px 14px calc(90px + var(--sb))}
 <nav id="nav"></nav></div></header>
 <main id="app" class="wrap"></main>
 <div class="toasts" id="toasts"></div>
+<div id="fs"></div>
 <div id="dlg"></div>
 <div id="sheet"></div>
 
@@ -401,6 +434,8 @@ const ICONS={
   warn:'<path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/>',
   bench:'<path d="M3 11h18M5 11v8M19 11v8M4 7h16v4H4z"/>',
   flag:'<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  shrink:'<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>',
   wifiOff:'<path d="M3 3l18 18"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M5 12.5a10 10 0 0 1 4.2-2.4M15.5 10.4A10 10 0 0 1 19 12.5"/><circle cx="12" cy="20" r=".8" fill="currentColor"/>'
 };
 const ic=(n,cls='')=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
@@ -504,7 +539,7 @@ function vRotacion(){
 function vMarcador(){
   const m=S.match,s=m.set,order=m.swapped?['B','A']:['A','B'];
   const tb=s.num===m.bestOf;
-  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${tb?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">a ${target()} puntos · al mejor de ${m.bestOf}</div></div><button class="btn sm" data-a="resetMatch">${ic('reset')}Nuevo partido</button></div>`;
+  let h=`<div class="sbhead"><div><div class="setpill"><b>Set ${s.num}</b>${tb?'<span class="tb">Desempate</span>':''}</div><div class="mut" style="margin-top:3px">a ${target()} puntos · al mejor de ${m.bestOf}</div></div><div class="row" style="gap:6px"><button class="btn sm" data-a="fsOn" aria-label="Pantalla completa">${ic('expand')}<span class="hide-xs">Pantalla completa</span></button><button class="btn sm" data-a="resetMatch" aria-label="Nuevo partido">${ic('reset')}<span class="hide-xs">Nuevo</span></button></div></div>`;
   if(m.scores.length)h+=`<div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>`;
   if(m.finished)h+=`<div class="banner ${m.finished}"><div class="ic">${ic('trophy')}</div><b>¡${esc(S.teams[m.finished].name)} gana el partido!</b><div class="sc">${m.setsWon[order[0]]} – ${m.setsWon[order[1]]} en sets</div><div class="row"><button class="btn sm" data-a="sub" data-t="${m.finished}">${ic('undo')}Deshacer punto</button><button class="btn pri sm" data-a="resetMatch">${ic('reset')}Revancha</button></div></div>`;
   else if(s.winner)h+=`<div class="banner ${s.winner}"><div class="ic">${ic('flag')}</div><b>Set para ${esc(S.teams[s.winner].name)}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="sub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="nextSet">Siguiente set${ic('arrowR')}</button></div></div>`;
@@ -540,6 +575,39 @@ function vSetup(order){
   return h;
 }
 
+
+/* ---------- Pantalla completa ---------- */
+let wl=null;
+async function wake(on){try{if(on&&'wakeLock' in navigator){if(!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}else if(!on&&wl){await wl.release();wl=null}}catch(e){}}
+function fsEnter(){ui.fs=true;ui.tab='marcador';render();wake(true);
+  const d=document.documentElement;try{const r=d.requestFullscreen?d.requestFullscreen({navigationUI:'hide'}):d.webkitRequestFullscreen?.();
+    Promise.resolve(r).then(()=>screen.orientation?.lock?.('landscape')).catch(()=>{})}catch(e){}
+  toast(matchMedia('(orientation:portrait)').matches?'Gira el móvil para verlo de lado':'Modo partido activado','expand')}
+function fsExit(){ui.fs=false;render();wake(false);try{screen.orientation?.unlock?.()}catch(e){}
+  try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen()}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ui.fs)wake(true)});
+function fsSide(t){const m=S.match,s=m.set,T=S.teams[t],n=need();
+  return `<div class="fss ${t}"><div class="top"><div class="nm">${esc(T.name)}</div><div class="rline"><span class="r">R${s.rot[t]}</span><button class="rbtn" data-a="rotSheet" data-t="${t}" aria-label="Cambiar rotación">${ic('edit')}</button></div><div class="sets">${Array.from({length:n},(_,i)=>`<i class="${i<m.setsWon[t]?'w':''}"></i>`).join('')}</div></div>
+    <div class="srvb" style="justify-content:center">${s.serving===t?`<span>${ic('ball')}SACA</span>`:''}</div>
+    <div class="pts" id="pts${t}">${s[t]}</div>
+    <div class="bot">${t==='A'?'':`<button class="minus" data-a="sub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>`}<button class="plus" data-a="add" data-t="${t}">${ic('plus')}1</button>${t==='A'?`<button class="minus" data-a="sub" data-t="${t}" aria-label="Restar">${ic('minus')}</button>`:''}</div></div>`}
+function fsView(){
+  const m=S.match,s=m.set,order=m.swapped?['B','A']:['A','B'];let body='';
+  if(!s.started){
+    body=`<div class="fssetup"><div class="card"><h2 style="justify-content:center">Set ${s.num} · a ${target()}</h2>
+      <div class="lbl" style="margin-top:0">Saca primero</div><div class="seg">${order.map(t=>`<button style="flex:1" class="${s.serving===t?'on '+t:''}" data-a="serve" data-t="${t}">${esc(S.teams[t].name)}</button>`).join('')}</div>
+      <p class="mut">Salen con ${esc(S.teams.A.name)} en R${baseRot('A')} y ${esc(S.teams.B.name)} en R${baseRot('B')}.</p>
+      <div class="row"><button class="btn" data-a="fsOff">${ic('shrink')}Ajustar</button><button class="btn pri" style="flex:1" data-a="startSet">${ic('whistle')}Pitar inicio</button></div></div></div>`;
+  }else body=`${fsSide(order[0])}<div class="fsc"><button class="iconbtn" data-a="fsOff" aria-label="Salir de pantalla completa">${ic('shrink')}</button>
+      <div class="setn"><b>Set ${s.num}</b><span>a ${target()}${s.num===m.bestOf?'<br>desempate':''}</span></div>
+      <div class="hist">${m.scores.map((x,i)=>`<span>S${i+1} <b>${x[order[0]]}–${x[order[1]]}</b></span>`).join('')}</div>
+      <button class="swap" data-a="swap" aria-label="Cambiar de campo">${ic('swap')}</button></div>${fsSide(order[1])}`;
+  let ban='';
+  if(m.finished)ban=`<div class="fsbanner"><div class="banner ${m.finished}"><div class="ic">${ic('trophy')}</div><b>¡${esc(S.teams[m.finished].name)} gana el partido!</b><div class="sc">${m.setsWon[order[0]]} – ${m.setsWon[order[1]]} en sets</div><div class="row"><button class="btn sm" data-a="sub" data-t="${m.finished}">${ic('undo')}Deshacer</button><button class="btn sm" data-a="fsOff">${ic('shrink')}Salir</button></div></div></div>`;
+  else if(s.winner)ban=`<div class="fsbanner"><div class="banner ${s.winner}"><div class="ic">${ic('flag')}</div><b>Set para ${esc(S.teams[s.winner].name)}</b><div class="sc">${s[order[0]]} – ${s[order[1]]}</div><div class="row"><button class="btn sm" data-a="sub" data-t="${s.winner}">${ic('undo')}Deshacer</button><button class="btn pri sm" data-a="nextSet">Siguiente set${ic('arrowR')}</button></div></div></div>`;
+  return `<div class="fsw"><div class="fsb" style="position:relative">${body}${ban}</div></div>`;
+}
+
 /* ---------- Hojas ---------- */
 function renderSheet(){
   const el=document.getElementById('sheet');const sh=ui.sheet;
@@ -573,6 +641,7 @@ function render(){
   const v={plantilla:vPlantilla,equipos:vEquipos,rotacion:vRotacion,marcador:vMarcador}[ui.tab]||vMarcador;
   const app=document.getElementById('app');app.innerHTML=v();
   if(ui.lastTab!==ui.tab){app.classList.remove('view');void app.offsetWidth;app.classList.add('view');ui.lastTab=ui.tab}
+  document.getElementById('fs').innerHTML=ui.fs?fsView():'';document.body.classList.toggle('fs-on',!!ui.fs);
   if(ui.sheet&&ui.sheet.k==='rot')renderSheet();
   maybeCoin();
 }
@@ -745,6 +814,8 @@ document.addEventListener('click',e=>{
   switch(a){
     case 'add':if(tapGuard('add'+t))break;mutate(()=>addPoint(t));{const e=document.getElementById('pts'+t);if(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump')}}if(navigator.vibrate)navigator.vibrate(15);break;
     case 'sub':if(tapGuard('sub'+t))break;mutate(()=>subPoint(t));break;
+    case 'fsOn':fsEnter();break;
+    case 'fsOff':fsExit();break;
     case 'swap':mutate(S=>{S.match.swapped=!S.match.swapped});toast('Cambio de campo','swap');break;
     case 'nextSet':mutate(()=>nextSet());break;
     case 'startSet':mutate(()=>{if(!S.match.set.started)startSet()});toast(`¡Arranca el set ${S.match.set.num}!`,'whistle');break;

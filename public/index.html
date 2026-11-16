@@ -141,6 +141,13 @@ main{padding:16px 14px calc(90px + var(--sb))}
 .localbar.on>svg.i{color:var(--acc)}
 .fslocal{font:700 10px/1.2 var(--fb);color:var(--acc);text-transform:uppercase;text-align:center;letter-spacing:.4px}
 /* ---- playa ---- */
+.lap{display:flex;flex-direction:column;align-items:center;gap:5px;margin:10px auto 0;max-width:280px}
+.lapbar{width:100%;height:7px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.lapbar i{display:block;height:100%;background:var(--acc);border-radius:4px;transition:width .4s}
+.lap span{font-size:12px;color:var(--mut)}
+svg.i.inl{width:13px;height:13px;vertical-align:-2px}.lap b{color:var(--txt)}
+.lapc{display:inline-flex;align-items:center;gap:3px;font:800 12px/1 var(--fb);color:var(--accTxt);background:var(--acc);border-radius:999px;padding:4px 7px;margin-right:8px;vertical-align:2px}.lapc svg.i{width:12px;height:12px;stroke-width:2.6}
+.lapc.z{background:var(--surface2);color:var(--mut)}
 .pickbtn{display:flex;align-items:center;gap:10px;min-height:62px;padding:10px;border-radius:14px;background:var(--surface2);border:1.5px dashed var(--line2);text-align:left;font-weight:700;color:var(--mut);min-width:0}
 .pickbtn svg.i{width:22px;height:22px;flex:none}
 .pickbtn span{line-height:1.2;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -823,8 +830,9 @@ function bMatchCard(m,ref){
   const side=t=>{const id=m[t];return `<div class="bp ${m.w===id?'w':m.w?'l':''}">${pairChip(id,winsOf(id)&&ref.type!=='tour'?`<em>${winsOf(id)}</em>`:'')}${!m.w?`<button class="btn sm" data-a="bQuick" data-ref='${JSON.stringify(ref)}' data-w="${id}" aria-label="Gana esta pareja">${ic('check')}</button>`:''}</div>`};
   return `<div class="bm ${m.w?'done':''} ${live?'live':''}">${side('A')}${side('B')}
     ${m.w?`<div class="mut" style="font-size:12px">${m.score||'Resultado anotado'}</div>`:`<button class="btn sm ${live?'pri':''} full" data-a="bPlay" data-ref='${JSON.stringify(ref)}'>${ic('board')}${live?'En juego · ver marcador':'Jugar con marcador'}</button>`}</div>`}
-function rankCard(K){const ids=BB().pairs.map(p=>p.id).sort((a,b)=>(K.wins[b]||0)-(K.wins[a]||0)||(K.played[a]||0)-(K.played[b]||0));
-  return `<div class="card"><h2>Clasificación</h2>${ids.map((id,i)=>`<div class="rank"><span class="rp">${i+1}</span>${pairChip(id)}<span class="rw"><b>${K.wins[id]||0}</b> V · ${K.played[id]||0} J</span></div>`).join('')}</div>`}
+function rankCard(K){const L=K.laps,ids=BB().pairs.map(p=>p.id).sort((a,b)=>((L?.[b]||0)-(L?.[a]||0))||(K.wins[b]||0)-(K.wins[a]||0)||(K.played[a]||0)-(K.played[b]||0));
+  return `<div class="card"><h2>Clasificación</h2>${ids.map((id,i)=>`<div class="rank"><span class="rp">${i+1}</span>${pairChip(id)}<span class="rw">${L?`<span class="lapc ${L[id]?'':'z'}" title="Vueltas">${ic('flag')}${L[id]||0}</span>`:''}<b>${K.wins[id]||0}</b> V · ${K.played[id]||0} J</span></div>`).join('')}
+  ${L?`<p class="mut" style="margin:10px 0 0">${ic('flag','inl')} vueltas (ganar seguidas a todas) · V victorias · J jugados</p>`:''}</div>`}
 function freeCard(target){const f=freePlayers();if(!f.length)return '';
   return `<div class="card freec"><h2>Sin pareja<span class="count">${f.length}</span></h2><div class="chips">${f.map(p=>`<span class="chip"><span class="av">${initialOf(p.name)}</span>${esc(p.name)}</span>`).join('')}</div>
    ${target?`<button class="btn full" data-a="bSwapFree" data-id="${target}" style="margin-top:12px">${ic('dice')}Que entre ${esc(f[0].name)}: sortear quién de ${pairName(target)} descansa</button>`:''}</div>`}
@@ -833,6 +841,7 @@ function vBKing(){const K=BB().game.king;
   const ch=K.queue[0];
   let h=`<div class="card kingc"><h2>En pista<span class="count">Partido ${K.games+1}</span></h2>
     <div class="kingrow"><div class="crownb">${ic('crown')}<span>Rey${K.streak>1?` · racha ${K.streak}`:''}</span></div>${pairChip(K.king,`<em>${K.wins[K.king]||0}</em>`)}</div>
+    ${(()=>{const n=K.queue.length,done=n?K.streak%n:0,lp=(K.laps||{})[K.king]||0;return `<div class="lap"><div class="lapbar"><i style="width:${n?done/n*100:0}%"></i></div><span>Vuelta: <b>${done}/${n}</b> rivales${lp?` · ${lp} vuelta${lp===1?'':'s'} completa${lp===1?'':'s'}`:''}</span></div>`})()}
     <div class="vsb" style="margin:8px auto">VS</div>
     <div class="kingrow"><div class="crownb ch">${ic('arrowR')}<span>Aspirante</span></div>${pairChip(ch,`<em>${K.wins[ch]||0}</em>`)}</div>
     <div class="row" style="margin-top:14px"><button class="btn" style="flex:1" data-a="bQuick" data-ref='{"type":"king"}' data-w="${K.king}">${ic('check')}Gana rey</button><button class="btn" style="flex:1" data-a="bQuick" data-ref='{"type":"king"}' data-w="${ch}">${ic('check')}Gana aspirante</button></div>
@@ -856,7 +865,8 @@ function tourAdvance(T){for(let r=0;r<T.rounds.length;r++){const R=T.rounds[r];i
   if(ws.length===1){T.champion=ws[0];return}
   if(!T.rounds[r+1]){const nx=[];for(let i=0;i<ws.length;i+=2)nx.push(ws[i+1]==null?{A:ws[i],B:null,w:ws[i]}:{A:ws[i],B:ws[i+1],w:null});T.rounds.push(nx)}}}
 function kingResult(K,w,score){const l=w===K.king?K.queue[0]:K.king;K.wins[w]=(K.wins[w]||0)+1;K.played[w]=(K.played[w]||0)+1;K.played[l]=(K.played[l]||0)+1;K.games++;
-  if(w===K.king){K.streak++;K.queue.shift();K.queue.push(l)}else{K.streak=1;K.queue.shift();K.queue.push(K.king);K.king=w}}
+  if(w===K.king){K.streak++;K.queue.shift();K.queue.push(l)}else{K.streak=1;K.queue.shift();K.queue.push(K.king);K.king=w}
+  K.laps=K.laps||{};const rivals=K.queue.length;if(rivals>0&&K.streak%rivals===0)K.laps[w]=(K.laps[w]||0)+1}
 function ladderNextRound(){const g=BB().game,L=g.ladder,ids=BB().pairs.map(p=>p.id);let list;
   if(!L)list=shuffle(ids);
   else{const last=L.rounds[L.rounds.length-1],W=shuffle(last.m.map(m=>m.w).filter(Boolean)),Lo=shuffle(last.m.map(m=>m.w===m.A?m.B:m.A).filter(Boolean));
@@ -891,6 +901,10 @@ function bCoin(w,l){if(bCoinBusy)return;bCoinBusy=true;
       c.animate([{transform:'translate(-50%,-50%)',opacity:1},{transform:`translate(${x}px,${y}px) rotate(${Math.random()*720}deg)`,opacity:1,offset:.6},{transform:`translate(${x}px,${y+280}px)`,opacity:0}],{duration:1500+Math.random()*700,easing:'cubic-bezier(.1,.7,.3,1)',fill:'forwards'})}},D);
   const close=()=>{clearTimeout(t1);clearTimeout(t2);ov.classList.remove('show');setTimeout(()=>{ov.remove();bCoinBusy=false},220)};const t2=setTimeout(close,D+2600),st=Date.now();
   ov.addEventListener('click',()=>{if(Date.now()-st>D)close()})}
+let lapSeen=null;
+function maybeLap(){const K=S&&S.beach&&S.beach.game.king;const L=K&&K.laps||{};const tot=Object.values(L).reduce((a,b)=>a+b,0);
+  if(lapSeen===null||tot<lapSeen){lapSeen=tot;return}
+  if(tot>lapSeen){lapSeen=tot;if(ui.mode==='playa'){toast(`¡Vuelta completa! ${pairName(K.king)} ha ganado a todas`,'flag');if(navigator.vibrate)navigator.vibrate([60,40,60,40,120])}}}
 function maybeBCoin(){const m=S&&S.beach&&S.beach.match;const d=m&&m.set.drawn;if(lastBDrawn===null){lastBDrawn=d||0;return}
   if(d&&d!==lastBDrawn){lastBDrawn=d;if(!m.set.started&&ui.mode==='playa')bCoin(m[m.set.serving],m[other(m.set.serving)])}}
 
@@ -982,7 +996,7 @@ function render(){
   if(ui.lastTab!==ui.tab){app.classList.remove('view');void app.offsetWidth;app.classList.add('view');ui.lastTab=ui.tab}
   document.getElementById('fs').innerHTML=ui.fs&&ui.mode==='pista'?fsView():'';document.body.classList.toggle('fs-on',!!ui.fs);
   if(ui.sheet&&ui.sheet.k==='rot')renderSheet();
-  maybeCoin();maybeBCoin();
+  maybeCoin();maybeBCoin();maybeLap();
 }
 
 
@@ -1179,7 +1193,7 @@ document.addEventListener('click',e=>{
     case 'bChoosePair':{const t2=ui.sheet.t;mutate(()=>{eb().game.single[t2]=id});ui.sheet=null;renderSheet();break}
     case 'bSingleRand':{const ids=shuffle(BB().pairs.map(p=>p.id));mutate(()=>{eb().game.single={A:ids[0],B:ids[1]}});break}
     case 'bTourNew':{const o=shuffle(BB().pairs.map(p=>p.id));mutate(()=>{eb().game.tour=tourCreate(o)});toast('¡Cuadro sorteado!','trophy');break}
-    case 'bKingNew':{const o=shuffle(BB().pairs.map(p=>p.id));mutate(()=>{eb().game.king={king:o[0],queue:o.slice(1),wins:{},played:{},games:0,streak:0}});toast(`Empieza de rey: ${pairName(o[0])}`,'crown');break}
+    case 'bKingNew':{const o=shuffle(BB().pairs.map(p=>p.id));mutate(()=>{eb().game.king={king:o[0],queue:o.slice(1),wins:{},played:{},laps:{},games:0,streak:0}});toast(`Empieza de rey: ${pairName(o[0])}`,'crown');break}
     case 'bLadderRound':{const r=ladderNextRound();mutate(()=>{const g=eb().game;if(!g.ladder)g.ladder={rounds:[],wins:{},played:{}};g.ladder.rounds.push(r)});toast(`Ronda ${(BB().game.ladder?.rounds.length)||1} sorteada`,'ladder');break}
     case 'bGameReset':{const t=BB().game.type;dialog({icon:'reset',tone:'danger',title:'¿Reiniciar?',text:'Se borran los cruces y las victorias de esta modalidad. Las parejas se mantienen.',ok:'Reiniciar',cancel:'Cancelar'}).then(y=>{if(y){mutate(()=>{const g=eb().game;g[t]=null;if(eb().match&&eb().match.ref.type===t)eb().match=null});toast('Reiniciado','reset')}});break}
     case 'bSwapFree':{const f=freePlayers()[0],pr=pairOf(id);if(!f||!pr)break;const k=Math.random()<.5?'a':'b',out=pr[k];
